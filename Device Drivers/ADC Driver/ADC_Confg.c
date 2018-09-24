@@ -36,10 +36,20 @@
 
 
 const ADC_Group ADC_GroupConfg[ADCNUMBEROFGROUPS]=
+{
 {0,3,ADC_Processor,
-NotempIntEndNodiff,Sample_NotUsed,Sample_NotUsed,
-Sample_NotUsed,Sample_NotUsed,Sample_NotUsed,
-Sample_NotUsed,Sample_NotUsed, ADC_CH0, 
-Mux_NotUsed, Mux_NotUsed, Mux_NotUsed, 
-Mux_NotUsed, Mux_NotUsed, Mux_NotUsed, 
-Mux_NotUsed};
+NotempIntEndNodiff,NotempNointEndNodiff,NotempNointEndNodiff,
+NotempNointEndNodiff,NotempNointEndNodiff,NotempNointEndNodiff,
+NotempNointEndNodiff,NotempNointEndNodiff, ADC_CH0, 
+ADC_CH0, ADC_CH0, ADC_CH0, 
+ADC_CH0, ADC_CH0, ADC_CH0, 
+ADC_CH0},
+{1,3,ADC_Processor,
+NotempIntEndNodiff,NotempNointEndNodiff,NotempNointEndNodiff,
+NotempNointEndNodiff,NotempNointEndNodiff,NotempNointEndNodiff,
+NotempNointEndNodiff,NotempNointEndNodiff, ADC_CH1, 
+ADC_CH0, ADC_CH0, ADC_CH0, 
+ADC_CH0, ADC_CH0, ADC_CH0, 
+ADC_CH0},
+
+};

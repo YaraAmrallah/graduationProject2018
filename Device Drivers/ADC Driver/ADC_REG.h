@@ -80,16 +80,17 @@
 #define ADCPP			0xFC0						// ADC Peripheral Properties
 #define ADCPC			0xFC4						// ADC Peripheral Configuration
 #define ADCCC			0xFC8						// ADC Clock Configuration
-/***************************************************************************************************************************************/
-
-
-/**********************************************ADC MOdule Run Mode Clocl************************************************************/
+/***************************************************************************************************************/
 /* Clock gating control */
 #define SYSCTL_RCGC0_R          (*((volatile uint32_t *)0x400FE100)) // Run mode clock gating control 
-#define ADC0_CLOCKGATINGBIT 16
-#define ADC1_CLOCKGATINGBIT 17
-#define ADC0_MAXSAMPLESPEEDBITs 8		// (8, 9)
-#define ADC1_MAXSAMPLESPEEDBITs 10		// (10, 11)
+
+/************************************************************************************************
+	* The Following are defined for the bit fields in RCGC0 register (For The ADC modules only.)
+	************************************************************************************************/
+#define ADC0						0x00010000		// ADC0 Clock Gating Control
+#define ADC1 						0x00020000		// ADC1 Clock Gating Control
+#define MAXADC0SPD 			0x00000300		// ADC0 Sample Speed
+#define MAXADC1SPD 			0x00000C00		// ADC1 Sample Speed
 /**********************************************************************************************************/
 
 /******************************************** Sample Sequencer priority Bits***************************************************************/
@@ -99,34 +100,40 @@
 #define ADC_SAMPLESEQ3PRIBITs 12
 /*****************************************************************************************************************************************/
 
-/******************************************* Sample  Control Bits ************************************************************************/
-#define ADC_SAMPLE0BITS 0
-#define ADC_SAMPLE1BITS 4
-#define ADC_SAMPLE2BITS 8
-#define ADC_SAMPLE3BITS 12
-#define ADC_SAMPLE4BITS 16
-#define ADC_SAMPLE5BITS 20
-#define ADC_SAMPLE6BITS 24
-#define ADC_SAMPLE7BITS 28
-/*************************************************************** ADCACTSS ***********************************************************/
-#define ASEN0	0									// Sequencer0 enable bit 0 
-#define ASEN1	1									// Sequencer1 enable bit 1
-#define ASEN2	2									// Sequencer2 enable bit 2
-#define ASEN3 3									// Sequencer3 enable bit 3
+/******************************************************************************
+ * The Following are defined for the bit fields in ADCACTSS registers
+ ******************************************************************************/
+#define ASEN0	0x00000001								// Sequencer0 enable bit 0 
+#define ASEN1	0x00000002								// Sequencer1 enable bit 1
+#define ASEN2	0x00000004								// Sequencer2 enable bit 2
+#define ASEN3 0x00000008								// Sequencer3 enable bit 3
 /************************************************************************************************************************************/
 
+/******************************************************************************
+ * The Following are defined for the bit fields in ADCSSMUXn registers
+ ******************************************************************************/
+#define MUX0 0x0000000F
+#define MUX1 0x000000F0
+#define MUX2 0x00000F00
+#define MUX3 0x0000F000
+#define MUX4 0x000F0000
+#define MUX5 0x00F00000
+#define MUX6 0x0F000000
+#define MUX7 0xF0000000
+/*******************************************************************************/
 
-/************************************************* Sample in channel mux bits *****************************/
-#define ADC_MUX0BITS 0
-#define ADC_MUX1BITS 4
-#define ADC_MUX2BITS 8
-#define ADC_MUX3BITS 12
-#define ADC_MUX4BITS 16
-#define ADC_MUX5BITS 20
-#define ADC_MUX6BITS 24
-#define ADC_MUX7BITS 28
-/***********************************************************************************************************/
-
+/******************************************************************************
+ * The Following are defined for the bit fields in ADCSSCTLn registers
+ ******************************************************************************/
+#define SAMPLE0 0x0000000F			
+#define SAMPLE1 0x000000F0
+#define SAMPLE2 0x00000F00
+#define SAMPLE3 0x0000F000
+#define SAMPLE4 0x000F0000
+#define SAMPLE5 0x00F00000
+#define SAMPLE6 0x0F000000
+#define SAMPLE7 0xF0000000
+/*******************************************************************************/
 
 /********************************* Event Multiplexer ******************************************************/
 #define EM0 0

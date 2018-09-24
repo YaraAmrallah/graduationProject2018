@@ -14,6 +14,7 @@
 #define GROUP0 0
 // The coming macro gives the exact register address, and cast it then dereference it 
 #define REGISTER(port_base,offset)   (*((volatile uint32_t*) (port_base+offset)))
+	
 #define CONC(x0,x1,x2,x3) CONC_HELPER(x0,x1,x2,x3)
 #define CONC_HELPER(x0,x1,x2,x3) 0##x##x3##x2##x1##x0
 
@@ -27,6 +28,16 @@ static const uint8_t ADC_SeqEnableBits[]={ASEN0, ASEN1, ASEN2, ASEN3};
 static const uint8_t ADC_EMUXBITS[]={EM0, EM1, EM2, EM3};
 static const uint8_t ADC_ISCBits[]={IN0, IN1, IN2, IN3};
 static const uint8_t ADC_PSSIBits[]={SS0,SS1,SS2,SS3};
+
+/*************************************************************************************************************
+ * The Following array are defined for the bit fields in ADCSSMUXn registers
+ *************************************************************************************************************/
+static const uint32_t MUX_BitFields[]={MUX0, MUX1, MUX2, MUX3, MUX4, MUX5, MUX6, MUX7};
+
+/**************************************************************************************************************
+ * The Following array are defined for the bit fields in ADCSSCTLn registers
+ **************************************************************************************************************/
+static const uint32_t Control_BitFields[]={SAMPLE0, SAMPLE2, SAMPLE3, SAMPLE4, SAMPLE5, SAMPLE6, SAMPLE7};
 											
 											
 /** 
@@ -93,11 +104,14 @@ static ADC_FunctionReturn ADC_ConfigureModule0(void)
 {
 	uint32_t delay;
 	ADC_FunctionReturn Function_ValidationCheck = ADC_OK, ADC_CalledFunctionReturn;
+	
 	// enable run mode clock gating control (bit 16 in RCGC0) Page 455.
-	SYSCTL_RCGC0_R |= ADC_ModuleOn << ADC0_CLOCKGATINGBIT;
+	SYSCTL_RCGC0_R |= ADC0;
 	delay = SYSCTL_RCGC0_R;
+	
 	// Specify Max sampling speed for module 0 bit 8, 9 in RCGC0 page 455.
-	SYSCTL_RCGC0_R |= ADC0MAXSAMPLING << ADC0_MAXSAMPLESPEEDBITs;
+	SYSCTL_RCGC0_R |= (ADC0MAXSAMPLING & MAXADC0SPD);
+	
 	 // Check Priorities of sample sequencers Module 0.
 	ADC_CalledFunctionReturn = ADC_PrioritiesCheck(SAMPLESEQ0M0PRI, SAMPLESEQ1M0PRI, SAMPLESEQ2M0PRI, SAMPLESEQ3M0PRI);
 	if(ADC_CalledFunctionReturn == ADC_OK)
@@ -123,13 +137,17 @@ static ADC_FunctionReturn ADC_ConfigureModule1(void)
 {
 	uint32_t delay;
 	ADC_FunctionReturn Function_ValidationCheck = ADC_OK, ADC_CalledFunctionReturn;
+	
 	// enable run mode clock gating control (bit 16 in RCGC0) Page 455.
-	SYSCTL_RCGC0_R |= ADC_ModuleOn << ADC1_CLOCKGATINGBIT;
-	 delay = SYSCTL_RCGC0_R;
-	 // Specify Max sampling speed for module 0 bit 8, 9 in RCGC0 page 455.
-	 SYSCTL_RCGC0_R |= ADC0MAXSAMPLING << ADC1_MAXSAMPLESPEEDBITs;
-	 // Check Priorities of sample sequencers Module 0.
+	SYSCTL_RCGC0_R |= ADC1;
+	delay = SYSCTL_RCGC0_R;
+	
+	 // Specify Max sampling speed for module 1 bit 10, 11 in RCGC0 page 455.
+	SYSCTL_RCGC0_R |= ( MAXADC1SPD & ADC1MAXSAMPLING);
+	
+	 // Check Priorities of sample sequencers Module 1.
 	ADC_CalledFunctionReturn = ADC_PrioritiesCheck(SAMPLESEQ0M1PRI, SAMPLESEQ1M1PRI, SAMPLESEQ2M1PRI, SAMPLESEQ3M1PRI);
+	
 	if(ADC_CalledFunctionReturn == ADC_OK)
 	{
 		REGISTER(ADC1BASEADDRESS, ADCSSPRI) = CONC(SAMPLESEQ0M1PRI, SAMPLESEQ1M1PRI, SAMPLESEQ2M1PRI, SAMPLESEQ3M1PRI);
@@ -141,7 +159,11 @@ static ADC_FunctionReturn ADC_ConfigureModule1(void)
 	return Function_ValidationCheck;
 }
 
-/*****************************************************************************************************/
+
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
 // SSnMUX function for choosing the inpput channel
 /**
 	* This Function used to choose the input channel for the coming sequence for sequencer three
@@ -155,13 +177,15 @@ static ADC_FunctionReturn ADC_SS3MUX(uint8_t ADC_GroupIdx)
 	
 	if(ADC_GroupIdx < GROUP0 || ADC_GroupIdx >= ADCNUMBEROFGROUPS)
 	{
-			Function_ValidationCheck = ADC_NOK;
+			Function_ValidationCheck = Invalid_GroupNumber;
 	}
 	else 
 	{
 	// Sample Sequencer 3 channel register page 872
+	REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId] ,ADCSSMUX3) &=
+			 ~(SAMPLE0);
 	REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId] ,ADCSSMUX3) |=
-			 ( ADC_GroupConfg[ADC_GroupIdx].Sample0_Channel << ADC_MUX0BITS);
+			 ( ADC_GroupConfg[ADC_GroupIdx].Sample0_Channel & MUX0);
 	}
 	//return the validation of the function
 return Function_ValidationCheck;	
@@ -173,23 +197,23 @@ static ADC_FunctionReturn ADC_SS2MUX(uint8_t ADC_GroupIdx)
 	ADC_FunctionReturn Function_ValidationCheck = ADC_OK;
 	if(ADC_GroupIdx < GROUP0 || ADC_GroupIdx >= ADCNUMBEROFGROUPS)
 	{
-			Function_ValidationCheck = ADC_NOK;
+			Function_ValidationCheck = Invalid_GroupNumber;
 	}
 	else 
 	{
 		// Sample Sequencer 2 channel register page 864
 		// MUX0
 		REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId] ,ADCSSMUX2) |=
-				( ADC_GroupConfg[ADC_GroupIdx].Sample0_Channel << ADC_MUX0BITS);
+				( ADC_GroupConfg[ADC_GroupIdx].Sample0_Channel & MUX0);
 		//MUX1
 		REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId] ,ADCSSMUX2) |=
-				( ADC_GroupConfg[ADC_GroupIdx].Sample1_Channel << ADC_MUX1BITS);
+				( ADC_GroupConfg[ADC_GroupIdx].Sample1_Channel & MUX1);
 		//MUX2
 		REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId] ,ADCSSMUX2) |=
-				( ADC_GroupConfg[ADC_GroupIdx].Sample2_Channel << ADC_MUX2BITS);
+				( ADC_GroupConfg[ADC_GroupIdx].Sample2_Channel & MUX2);
 		//MUX3
 		REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId] ,ADCSSMUX2) |=
-				( ADC_GroupConfg[ADC_GroupIdx].Sample3_Channel << ADC_MUX3BITS);
+				( ADC_GroupConfg[ADC_GroupIdx].Sample3_Channel & MUX3);
 	}
 	return Function_ValidationCheck;
 	
@@ -198,27 +222,27 @@ static ADC_FunctionReturn ADC_SS2MUX(uint8_t ADC_GroupIdx)
 // SS1
 static ADC_FunctionReturn ADC_SS1MUX(uint8_t ADC_GroupIdx)
 {
-	ADC_FunctionReturn Function_ValidationCheck = ADC_OK;
+	ADC_FunctionReturn Function_ValidationCheck = Invalid_GroupNumber;
 	
 	if(ADC_GroupIdx < GROUP0 || ADC_GroupIdx >= ADCNUMBEROFGROUPS)
 	{
-			Function_ValidationCheck = ADC_NOK;
+			Function_ValidationCheck = Invalid_GroupNumber;
 	}
 	else 
 	{
 	// Sample Sequencer 1 channel register page 864
 	// MUX0
 	REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId] ,ADCSSMUX1) |=
-			 ( ADC_GroupConfg[ADC_GroupIdx].Sample0_Channel << ADC_MUX0BITS);
+			 ( ADC_GroupConfg[ADC_GroupIdx].Sample0_Channel & MUX0);
 	//MUX1
 	REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId] ,ADCSSMUX1) |=
-			 ( ADC_GroupConfg[ADC_GroupIdx].Sample1_Channel << ADC_MUX1BITS);
+			 ( ADC_GroupConfg[ADC_GroupIdx].Sample1_Channel & MUX1);
 	//MUX2
 	REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId] ,ADCSSMUX1) |=
-			 ( ADC_GroupConfg[ADC_GroupIdx].Sample2_Channel << ADC_MUX2BITS);
+			 ( ADC_GroupConfg[ADC_GroupIdx].Sample2_Channel & MUX2);
 	//MUX3
 	REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId] ,ADCSSMUX1) |=
-			 ( ADC_GroupConfg[ADC_GroupIdx].Sample3_Channel << ADC_MUX3BITS);
+			 ( ADC_GroupConfg[ADC_GroupIdx].Sample3_Channel & MUX3);
 	}
 	return Function_ValidationCheck;
 	
@@ -228,47 +252,52 @@ static ADC_FunctionReturn ADC_SS1MUX(uint8_t ADC_GroupIdx)
 // SS0
 static ADC_FunctionReturn ADC_SS0MUX(uint8_t ADC_GroupIdx)
 {
-	ADC_FunctionReturn Function_ValidationCheck = ADC_OK;
+	ADC_FunctionReturn Function_ValidationCheck = Invalid_GroupNumber;
 	
 	if(ADC_GroupIdx < GROUP0 || ADC_GroupIdx >= ADCNUMBEROFGROUPS)
 	{
-			Function_ValidationCheck = ADC_NOK;
+			Function_ValidationCheck = Invalid_GroupNumber;
 	}
 	else 
 	{
 	// Sample Sequencer 0 channel register page 848
 	// MUX0
 	REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId] ,ADCSSMUX0) |=
-			 ( ADC_GroupConfg[ADC_GroupIdx].Sample0_Channel << ADC_MUX0BITS);
+			 ( ADC_GroupConfg[ADC_GroupIdx].Sample0_Channel & MUX0);
 	//MUX1
 	REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId] ,ADCSSMUX0) |=
-			 ( ADC_GroupConfg[ADC_GroupIdx].Sample1_Channel << ADC_MUX1BITS);
+			 ( ADC_GroupConfg[ADC_GroupIdx].Sample1_Channel & MUX1);
 	//MUX2
 	REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId] ,ADCSSMUX0) |=
-			 ( ADC_GroupConfg[ADC_GroupIdx].Sample2_Channel << ADC_MUX2BITS);
+			 ( ADC_GroupConfg[ADC_GroupIdx].Sample2_Channel & MUX2);
 	//MUX3
 	REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId] ,ADCSSMUX0) |=
-			 ( ADC_GroupConfg[ADC_GroupIdx].Sample3_Channel << ADC_MUX3BITS);
+			 ( ADC_GroupConfg[ADC_GroupIdx].Sample3_Channel & MUX3);
 	// MUX4
 	REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId] ,ADCSSMUX0) |=
-			 ( ADC_GroupConfg[ADC_GroupIdx].Sample4_Channel << ADC_MUX4BITS);
+			 ( ADC_GroupConfg[ADC_GroupIdx].Sample4_Channel & MUX4);
 	//MUX5
 	REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId] ,ADCSSMUX0) |=
-			 ( ADC_GroupConfg[ADC_GroupIdx].Sample5_Channel << ADC_MUX5BITS);
+			 ( ADC_GroupConfg[ADC_GroupIdx].Sample5_Channel & MUX5);
 	//MUX6
 	REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId] ,ADCSSMUX0) |=
-			 ( ADC_GroupConfg[ADC_GroupIdx].Sample6_Channel << ADC_MUX6BITS);
+			 ( ADC_GroupConfg[ADC_GroupIdx].Sample6_Channel & MUX6);
 	//MUX7
 	REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId] ,ADCSSMUX0) |=
-			 ( ADC_GroupConfg[ADC_GroupIdx].Sample7_Channel << ADC_MUX7BITS);
+			 ( ADC_GroupConfg[ADC_GroupIdx].Sample7_Channel & MUX7);
 	
 	}
 	return Function_ValidationCheck;
 	
 }
-/*****************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
 
-/*****************************************************************************************************/
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
 // Setting Sample Sequencer Control Bits 
 // SSCTL3
 ADC_FunctionReturn ADC_SSCTL3(uint8_t ADC_GroupIdx)
@@ -277,12 +306,12 @@ ADC_FunctionReturn ADC_SSCTL3(uint8_t ADC_GroupIdx)
 	
 	if(ADC_GroupIdx < GROUP0 || ADC_GroupIdx >= ADCNUMBEROFGROUPS)
 	{
-		Function_ValidationCheck = ADC_NOK;
+		Function_ValidationCheck = Invalid_GroupNumber;
 	}
 	else
 	{
 			REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId], ADCSSCTL3) |= 
-						(ADC_GroupConfg[ADC_GroupIdx].sample0 << ADC_SAMPLE0BITS);
+						(ADC_GroupConfg[ADC_GroupIdx].sample0 & SAMPLE0);
 	}
 	return Function_ValidationCheck;
 }
@@ -293,18 +322,18 @@ ADC_FunctionReturn ADC_SSCTL2(uint8_t ADC_GroupIdx)
 	
 	if(ADC_GroupIdx < GROUP0 || ADC_GroupIdx >= ADCNUMBEROFGROUPS)
 	{
-		Function_ValidationCheck = ADC_NOK;
+		Function_ValidationCheck = Invalid_GroupNumber;
 	}
 	else
 	{
 		REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId], ADCSSCTL2) |= 
-		(ADC_GroupConfg[ADC_GroupIdx].sample0 << ADC_SAMPLE0BITS);
+		(ADC_GroupConfg[ADC_GroupIdx].sample0 & SAMPLE0);
 		REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId], ADCSSCTL2) |= 
-		(ADC_GroupConfg[ADC_GroupIdx].sample1 << ADC_SAMPLE1BITS);
+		(ADC_GroupConfg[ADC_GroupIdx].sample1 & SAMPLE1);
 		REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId], ADCSSCTL2) |= 
-		(ADC_GroupConfg[ADC_GroupIdx].sample2 << ADC_SAMPLE2BITS);
+		(ADC_GroupConfg[ADC_GroupIdx].sample2 & SAMPLE2);
 		REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId], ADCSSCTL2) |= 
-		(ADC_GroupConfg[ADC_GroupIdx].sample3 << ADC_SAMPLE3BITS);
+		(ADC_GroupConfg[ADC_GroupIdx].sample3 & SAMPLE3);
 	}
 	return Function_ValidationCheck;
 }
@@ -315,18 +344,18 @@ ADC_FunctionReturn ADC_SSCTL1(uint8_t ADC_GroupIdx)
 	
 	if(ADC_GroupIdx < GROUP0 || ADC_GroupIdx >= ADCNUMBEROFGROUPS)
 	{
-		Function_ValidationCheck = ADC_NOK;
+		Function_ValidationCheck = Invalid_GroupNumber;
 	}
 	else
 	{
 		REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId], ADCSSCTL1) |= 
-		(ADC_GroupConfg[ADC_GroupIdx].sample0 << ADC_SAMPLE0BITS);
+		(ADC_GroupConfg[ADC_GroupIdx].sample0 & SAMPLE0);
 		REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId], ADCSSCTL1) |= 
-		(ADC_GroupConfg[ADC_GroupIdx].sample1 << ADC_SAMPLE1BITS);
+		(ADC_GroupConfg[ADC_GroupIdx].sample1 & SAMPLE1);
 		REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId], ADCSSCTL1) |= 
-		(ADC_GroupConfg[ADC_GroupIdx].sample2 << ADC_SAMPLE2BITS);
+		(ADC_GroupConfg[ADC_GroupIdx].sample2 & SAMPLE2);
 		REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId], ADCSSCTL1) |= 
-		(ADC_GroupConfg[ADC_GroupIdx].sample3 << ADC_SAMPLE3BITS);
+		(ADC_GroupConfg[ADC_GroupIdx].sample3 & SAMPLE3);
 	}
 	return Function_ValidationCheck;
 }
@@ -337,30 +366,32 @@ ADC_FunctionReturn ADC_SSCTL0(uint8_t ADC_GroupIdx)
 	
 	if(ADC_GroupIdx < GROUP0 || ADC_GroupIdx >= ADCNUMBEROFGROUPS)
 	{
-		Function_ValidationCheck = ADC_NOK;
+		Function_ValidationCheck = Invalid_GroupNumber;
 	}
 	else
 	{
 		REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId], ADCSSCTL0) |= 
-		(ADC_GroupConfg[ADC_GroupIdx].sample0 << ADC_SAMPLE0BITS);
+		(ADC_GroupConfg[ADC_GroupIdx].sample0 & SAMPLE0);
 		REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId], ADCSSCTL0) |= 
-		(ADC_GroupConfg[ADC_GroupIdx].sample1 << ADC_SAMPLE1BITS);
+		(ADC_GroupConfg[ADC_GroupIdx].sample1 & SAMPLE1);
 		REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId], ADCSSCTL0) |= 
-		(ADC_GroupConfg[ADC_GroupIdx].sample2 << ADC_SAMPLE2BITS);
+		(ADC_GroupConfg[ADC_GroupIdx].sample2 & SAMPLE2);
 		REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId], ADCSSCTL0) |= 
-		(ADC_GroupConfg[ADC_GroupIdx].sample3 << ADC_SAMPLE3BITS);
+		(ADC_GroupConfg[ADC_GroupIdx].sample3 & SAMPLE3);
 		REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId], ADCSSCTL0) |= 
-		(ADC_GroupConfg[ADC_GroupIdx].sample4 << ADC_SAMPLE0BITS);
+		(ADC_GroupConfg[ADC_GroupIdx].sample4 & SAMPLE4);
 		REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId], ADCSSCTL0) |= 
-		(ADC_GroupConfg[ADC_GroupIdx].sample5 << ADC_SAMPLE1BITS);
+		(ADC_GroupConfg[ADC_GroupIdx].sample5 & SAMPLE5);
 		REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId], ADCSSCTL0) |= 
-		(ADC_GroupConfg[ADC_GroupIdx].sample6 << ADC_SAMPLE2BITS);
+		(ADC_GroupConfg[ADC_GroupIdx].sample6 & SAMPLE6);
 		REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId], ADCSSCTL0) |= 
-		(ADC_GroupConfg[ADC_GroupIdx].sample7 << ADC_SAMPLE3BITS);
+		(ADC_GroupConfg[ADC_GroupIdx].sample7 & SAMPLE7);
 	}
 	return Function_ValidationCheck;
 }
-
+/**************************************************************************************************************************************/
+/**************************************************************************************************************************************/
+/**************************************************************************************************************************************/
 /**
   * This function is used in Initializing  ADC Groups and modules
   */
@@ -477,6 +508,7 @@ ADC_FunctionReturn ADC_Init(void)
 			{
 				// Do Nothing
 			}
+			
 			//enable SSid
 			REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_LoopIdx].ADC_ModuleId], ADCACTSS) |= 
 			(1 << ADC_GroupConfg[ADC_LoopIdx].ADC_SSId);
@@ -528,7 +560,107 @@ ADC_FunctionReturn  ADC_SSFIFO(uint8_t ADC_GroupIdx,uint32_t* ADC_SampleRes)
 		return Function_ValidationCheck;
 }
 
+/*********************************************************************************************************
+ * Variadic function used in initializing the sequencer input channels.
+ *********************************************************************************************************/
+ADC_FunctionReturn ADC_SSnChooseInCh(uint8_t ADC_GroupIdx,uint8_t ADC_NoSamples, ... )
+{
+	uint8_t Loop_Idx;
+	ADC_FunctionReturn Function_ValidationCheck;
+	va_list enumArgumentPointer;
+	if(ADC_GroupIdx < GROUP0 && ADC_GroupIdx > ADCNUMBEROFGROUPS)
+	{
+		Function_ValidationCheck = Invalid_GroupNumber;
+	}
+	else if(ADC_GroupConfg[ADC_GroupIdx].ADC_SSId == 0 && ADC_NoSamples > 1)
+	{
+		Function_ValidationCheck = Invalid_SS0SampleNumbers;
+	}
+	else if( ADC_GroupConfg[ADC_GroupIdx].ADC_SSId == 1 && ADC_NoSamples > 4)
+	{
+		Function_ValidationCheck = Invalid_SS1SampleNumbers;
+	}
+	else if (ADC_GroupConfg[ADC_GroupIdx].ADC_SSId == 2 && ADC_NoSamples > 4)
+	{
+		Function_ValidationCheck = Invalid_SS2SampleNumbers;
+	}
+	else if(	ADC_GroupConfg[ADC_GroupIdx].ADC_SSId == 3 && ADC_NoSamples > 8)
+	{
+		Function_ValidationCheck = Invalid_SS3SampleNumbers;
+	}
+	else 
+	{
+			// Disable the sequencer before changing the sample input channel.
+			REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId],ADCACTSS)
+			&= ~(ADC_GroupConfg[ADC_GroupIdx].ADC_SSId);
+			for(Loop_Idx = 0 ;Loop_Idx < ADC_NoSamples; Loop_Idx++)
+			{
+				REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId],ADC_SSMUXn[ADC_GroupConfg[ADC_GroupIdx].ADC_SSId])
+				&= ~(MUX_BitFields[Loop_Idx]);
+				REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId],ADC_SSMUXn[ADC_GroupConfg[ADC_GroupIdx].ADC_SSId])
+				|= (MUX_BitFields[Loop_Idx] & va_arg( enumArgumentPointer, ADC_Channel));
+				
+			}
+			va_end( enumArgumentPointer );
+			// Enable the sequencer.
+			REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId],ADCACTSS)
+			|= (ADC_GroupConfg[ADC_GroupIdx].ADC_SSId);
+			Function_ValidationCheck = ADC_OK;
+	}
+	return Function_ValidationCheck;
+}
 
+/*********************************************************************************************************
+ * Variadic function used in Configuring the sequencer Control bits in ADCSSCTLn Registers.
+ *********************************************************************************************************/
+ADC_FunctionReturn ADC_SSnControl(uint8_t ADC_GroupIdx,uint8_t ADC_NoSamples, ... )
+{
+	uint8_t Loop_Idx;
+	ADC_FunctionReturn Function_ValidationCheck;
+	va_list enumArgumentPointer;
+	if(ADC_GroupIdx < GROUP0 && ADC_GroupIdx > ADCNUMBEROFGROUPS)
+	{
+		Function_ValidationCheck = Invalid_GroupNumber;
+	}
+	else if(ADC_GroupConfg[ADC_GroupIdx].ADC_SSId == 0 && ADC_NoSamples > 1)
+	{
+		Function_ValidationCheck = Invalid_SS0SampleNumbers;
+	}
+	else if( ADC_GroupConfg[ADC_GroupIdx].ADC_SSId == 1 && ADC_NoSamples > 4)
+	{
+		Function_ValidationCheck = Invalid_SS1SampleNumbers;
+	}
+	else if (ADC_GroupConfg[ADC_GroupIdx].ADC_SSId == 2 && ADC_NoSamples > 4)
+	{
+		Function_ValidationCheck = Invalid_SS2SampleNumbers;
+	}
+	else if(	ADC_GroupConfg[ADC_GroupIdx].ADC_SSId == 3 && ADC_NoSamples > 8)
+	{
+		Function_ValidationCheck = Invalid_SS3SampleNumbers;
+	}
+	else 
+	{
+			REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId],ADCACTSS)
+			&= ~(ADC_GroupConfg[ADC_GroupIdx].ADC_SSId);
+			for(Loop_Idx = 0 ;Loop_Idx < ADC_NoSamples; Loop_Idx++)
+			{
+				REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId],ADC_SSMUXn[ADC_GroupConfg[ADC_GroupIdx].ADC_SSId])
+				&= ~(Control_BitFields[Loop_Idx]);
+				REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId],ADC_SSMUXn[ADC_GroupConfg[ADC_GroupIdx].ADC_SSId])
+				|= (Control_BitFields[Loop_Idx] & va_arg( enumArgumentPointer, ADC_SampleSeqControlBitsCombination));
+				
+			}
+			va_end( enumArgumentPointer );
+			REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId],ADCACTSS)
+			|= (ADC_GroupConfg[ADC_GroupIdx].ADC_SSId);
+			Function_ValidationCheck = ADC_OK;
+	}
+	return Function_ValidationCheck;
+}
+	
+/**************************************************************************************************************************
+ * Clear ADIF Bit (in Polling)
+ **************************************************************************************************************************/
 ADC_FunctionReturn ADC_SampleAcknowledge(uint8_t ADC_GroupIdx)
 {
 		ADC_FunctionReturn Function_ValidationCheck = ADC_OK;
@@ -544,8 +676,9 @@ ADC_FunctionReturn ADC_SampleAcknowledge(uint8_t ADC_GroupIdx)
 		return Function_ValidationCheck;
 	}
 
-	
-	
+/*********************************************************************************************************************
+ * Initiate sequence Conversion by setting the SSn bit in ADCPSSI register
+	********************************************************************************************************************/
 ADC_FunctionReturn ADC_ProcessorInitiateSampling(uint8_t ADC_GroupIdx)
 {
 		ADC_FunctionReturn Function_ValidationCheck = ADC_OK;

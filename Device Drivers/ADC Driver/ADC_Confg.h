@@ -10,7 +10,7 @@
 
 #ifndef ADC_CONFG_H
 #define ADC_CONFG_H
-#define ADCNUMBEROFGROUPS 1
+#define ADCNUMBEROFGROUPS 2
 
 #include "ADC.h"
 
@@ -19,14 +19,14 @@
 // Number of sample sequencers in the two modules to be configured
 
 #define CONFIGUREMODULE0  ADC_ModuleOn
-#define CONFIGUREMODULE1  ADC_ModuleOff
+#define CONFIGUREMODULE1  ADC_ModuleOn
 
 /**********************************Sampling speed****************************************************/
 /**
   * the coming two macros used in specifying the sample speed of the modules
   * less speed less power consume, longer sampling time and more accurate conversion
   */
-#define ADC0MAXSAMPLING ADC_1M
+#define ADC0MAXSAMPLING ADC_125K
 #define ADC1MAXSAMPLING ADC_125K
 /**************************************************************************************/
  
