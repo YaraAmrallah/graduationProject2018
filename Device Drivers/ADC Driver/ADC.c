@@ -18,16 +18,25 @@
 #define CONC(x0,x1,x2,x3) CONC_HELPER(x0,x1,x2,x3)
 #define CONC_HELPER(x0,x1,x2,x3) 0##x##x3##x2##x1##x0
 
+/*****************************************************************************
+ * ADC Modules Base address.
+ *****************************************************************************/
 static const uint32_t ADC_ModuleBase[]={ADC0BASEADDRESS, ADC1BASEADDRESS};
 
+/*****************************************************************************
+ * ADC sample sequncers offsets' array for choosing input channels. 
+******************************************************************************/
 static const uint32_t ADC_SSMUXn[]={ADCSSMUX0, ADCSSMUX1, ADCSSMUX2, ADCSSMUX3};
-static const uint32_t ADC_FIFOReg[]={ADCSSFIFO0, ADCSSFIFO1, ADCSSFIFO2, ADCSSFIFO3};
 
+/*****************************************************************************
+ * ADC sample sequncers offsets' array for choosing sample control.  
+******************************************************************************/
+static const uint32_t ADC_SSCTLn[]={ADCSSCTL0, ADCSSCTL1, ADCSSCTL2, ADCSSCTL3};
 
-static const uint8_t ADC_SeqEnableBits[]={ASEN0, ASEN1, ASEN2, ASEN3};
-static const uint8_t ADC_EMUXBITS[]={EM0, EM1, EM2, EM3};
-static const uint8_t ADC_ISCBits[]={IN0, IN1, IN2, IN3};
-static const uint8_t ADC_PSSIBits[]={SS0,SS1,SS2,SS3};
+/*******************************************************************************************
+ * ADC sample sequncers offsets' array containig the FIFO offset for every sample sequencer.  
+********************************************************************************************/
+static const uint32_t ADC_FIFOn[]={ADCSSFIFO0, ADCSSFIFO1, ADCSSFIFO2, ADCSSFIFO3};
 
 /*************************************************************************************************************
  * The Following array are defined for the bit fields in ADCSSMUXn registers
@@ -38,7 +47,16 @@ static const uint32_t MUX_BitFields[]={MUX0, MUX1, MUX2, MUX3, MUX4, MUX5, MUX6,
  * The Following array are defined for the bit fields in ADCSSCTLn registers
  **************************************************************************************************************/
 static const uint32_t Control_BitFields[]={SAMPLE0, SAMPLE2, SAMPLE3, SAMPLE4, SAMPLE5, SAMPLE6, SAMPLE7};
-											
+
+/******************************************************************************
+ * The Following array is defined for the bit fields in ADCEMUX register (page: 830).
+ ******************************************************************************/
+static const uint32_t ADC_EMUXBitFields[]={EM0, EM1, EM2, EM3};
+
+/******************************************************************************
+ * The Following array is defined for the bit fields in ADCISC register (page: 825).
+ ******************************************************************************/
+static const uint8_t ADC_ISCBitFields[]={IN0, IN1, IN2, IN3};
 											
 /** 
   * this function is used within this file only (static function)
@@ -300,7 +318,7 @@ static ADC_FunctionReturn ADC_SS0MUX(uint8_t ADC_GroupIdx)
 /************************************************************************************************************/
 // Setting Sample Sequencer Control Bits 
 // SSCTL3
-ADC_FunctionReturn ADC_SSCTL3(uint8_t ADC_GroupIdx)
+static ADC_FunctionReturn ADC_SSCTL3(uint8_t ADC_GroupIdx)
 {
 	ADC_FunctionReturn Function_ValidationCheck=ADC_OK;
 	
@@ -316,7 +334,7 @@ ADC_FunctionReturn ADC_SSCTL3(uint8_t ADC_GroupIdx)
 	return Function_ValidationCheck;
 }
 
-ADC_FunctionReturn ADC_SSCTL2(uint8_t ADC_GroupIdx)
+static ADC_FunctionReturn ADC_SSCTL2(uint8_t ADC_GroupIdx)
 {
 	ADC_FunctionReturn Function_ValidationCheck=ADC_OK;
 	
@@ -338,7 +356,7 @@ ADC_FunctionReturn ADC_SSCTL2(uint8_t ADC_GroupIdx)
 	return Function_ValidationCheck;
 }
 
-ADC_FunctionReturn ADC_SSCTL1(uint8_t ADC_GroupIdx)
+static ADC_FunctionReturn ADC_SSCTL1(uint8_t ADC_GroupIdx)
 {
 	ADC_FunctionReturn Function_ValidationCheck=ADC_OK;
 	
@@ -360,7 +378,7 @@ ADC_FunctionReturn ADC_SSCTL1(uint8_t ADC_GroupIdx)
 	return Function_ValidationCheck;
 }
 
-ADC_FunctionReturn ADC_SSCTL0(uint8_t ADC_GroupIdx)
+static ADC_FunctionReturn ADC_SSCTL0(uint8_t ADC_GroupIdx)
 {
 	ADC_FunctionReturn Function_ValidationCheck=ADC_OK;
 	
@@ -389,12 +407,11 @@ ADC_FunctionReturn ADC_SSCTL0(uint8_t ADC_GroupIdx)
 	}
 	return Function_ValidationCheck;
 }
-/**************************************************************************************************************************************/
-/**************************************************************************************************************************************/
-/**************************************************************************************************************************************/
-/**
-  * This function is used in Initializing  ADC Groups and modules
-  */
+/************************************************************************************************************/
+
+/************************************************************************************************************
+ * This function is used in Initializing  ADC Groups and modules
+ ***********************************************************************************************************/
 ADC_FunctionReturn ADC_Init(void)
 {
 	ADC_FunctionReturn Function_ValidationCheck = ADC_OK, ADC_CalledFunctionReturn = ADC_OK;
@@ -450,7 +467,7 @@ ADC_FunctionReturn ADC_Init(void)
 			 
 			 // Setting the triggering event
 			 REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_LoopIdx].ADC_ModuleId], ADCEMUX) 
-		  	|= (ADC_GroupConfg[ADC_LoopIdx].ADC_TriggeringEvent << ADC_EMUXBITS[ADC_GroupConfg[ADC_LoopIdx].ADC_SSId] );
+		  	|= (ADC_GroupConfg[ADC_LoopIdx].ADC_TriggeringEvent << ADC_EMUXBitFields[ADC_GroupConfg[ADC_LoopIdx].ADC_SSId] );
 			 
 			 // Choosing input channel for the sequencer depending on the sequencer id (0, 1, 2, 3)
 			 switch(ADC_GroupConfg[ADC_LoopIdx].ADC_SSId)
@@ -519,14 +536,13 @@ ADC_FunctionReturn ADC_Init(void)
 	
 }
 
-/**
+/*******************************************************************************************
   * This Function is used in getting trigger state for the running sequence 
   * return 0 completed successfully
 	* return 1 terminated unsuccessful
 	* takes the adc group idx, a pointer to a variable
   * return the trigger state in the variable pointed to it by the second parameter
-  */
- 
+  *******************************************************************************************/
 ADC_FunctionReturn ADC_GetTriggerState(uint8_t ADC_GroupIdx,uint8_t *ADC_TriggerState)
 {
 		ADC_FunctionReturn Function_ValidationCheck = ADC_OK;
@@ -554,7 +570,7 @@ ADC_FunctionReturn  ADC_SSFIFO(uint8_t ADC_GroupIdx,uint32_t* ADC_SampleRes)
 		else 
 		{
 			*ADC_SampleRes =
-			(REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId],ADC_FIFOReg[ADC_GroupConfg[ADC_GroupIdx].ADC_SSId])
+			(REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId],ADC_FIFOn[ADC_GroupConfg[ADC_GroupIdx].ADC_SSId])
 			&0xFFF);
 		}
 		return Function_ValidationCheck;
@@ -622,7 +638,7 @@ ADC_FunctionReturn ADC_SSnControl(uint8_t ADC_GroupIdx,uint8_t ADC_NoSamples, ..
 	{
 		Function_ValidationCheck = Invalid_GroupNumber;
 	}
-	else if(ADC_GroupConfg[ADC_GroupIdx].ADC_SSId == 0 && ADC_NoSamples > 1)
+	else if(ADC_GroupConfg[ADC_GroupIdx].ADC_SSId == 0 && ADC_NoSamples > 8)
 	{
 		Function_ValidationCheck = Invalid_SS0SampleNumbers;
 	}
@@ -634,7 +650,7 @@ ADC_FunctionReturn ADC_SSnControl(uint8_t ADC_GroupIdx,uint8_t ADC_NoSamples, ..
 	{
 		Function_ValidationCheck = Invalid_SS2SampleNumbers;
 	}
-	else if(	ADC_GroupConfg[ADC_GroupIdx].ADC_SSId == 3 && ADC_NoSamples > 8)
+	else if(	ADC_GroupConfg[ADC_GroupIdx].ADC_SSId == 3 && ADC_NoSamples > 1)
 	{
 		Function_ValidationCheck = Invalid_SS3SampleNumbers;
 	}
@@ -644,9 +660,9 @@ ADC_FunctionReturn ADC_SSnControl(uint8_t ADC_GroupIdx,uint8_t ADC_NoSamples, ..
 			&= ~(ADC_GroupConfg[ADC_GroupIdx].ADC_SSId);
 			for(Loop_Idx = 0 ;Loop_Idx < ADC_NoSamples; Loop_Idx++)
 			{
-				REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId],ADC_SSMUXn[ADC_GroupConfg[ADC_GroupIdx].ADC_SSId])
+				REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId],ADC_SSCTLn[ADC_GroupConfg[ADC_GroupIdx].ADC_SSId])
 				&= ~(Control_BitFields[Loop_Idx]);
-				REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId],ADC_SSMUXn[ADC_GroupConfg[ADC_GroupIdx].ADC_SSId])
+				REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId],ADC_SSCTLn[ADC_GroupConfg[ADC_GroupIdx].ADC_SSId])
 				|= (Control_BitFields[Loop_Idx] & va_arg( enumArgumentPointer, ADC_SampleSeqControlBitsCombination));
 				
 			}
@@ -671,7 +687,7 @@ ADC_FunctionReturn ADC_SampleAcknowledge(uint8_t ADC_GroupIdx)
 		else 
 		{
 			REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId],ADCISC)|=
-			(1 << ADC_ISCBits[ADC_GroupConfg[ADC_GroupIdx].ADC_SSId]);
+			(1 << ADC_ISCBitFields[ADC_GroupConfg[ADC_GroupIdx].ADC_SSId]);
 		}
 		return Function_ValidationCheck;
 	}
@@ -689,7 +705,7 @@ ADC_FunctionReturn ADC_ProcessorInitiateSampling(uint8_t ADC_GroupIdx)
 		else 
 		{
 			REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId],ADCPSSI)|=
-			(1 << ADC_PSSIBits[ADC_GroupConfg[ADC_GroupIdx].ADC_SSId]);
+			(1 << ADC_GroupConfg[ADC_GroupIdx].ADC_SSId);
 		}
 		return Function_ValidationCheck;
 }

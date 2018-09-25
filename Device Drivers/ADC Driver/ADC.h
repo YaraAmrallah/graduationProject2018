@@ -49,6 +49,7 @@ typedef struct
 	uint8_t ADC_SSId;
 	
 	ADC_TriggerEvent ADC_TriggeringEvent;
+	
 	ADC_SampleSeqControlBitsCombination sample0;
 	ADC_SampleSeqControlBitsCombination sample1;
 	ADC_SampleSeqControlBitsCombination sample2;
