@@ -39,7 +39,7 @@ Interrupt_ReturnType Interrupt_EnableSetPri(uint8_t interrupt_number, uint8_t pr
 		// disable interrupt
 		if(int_en == 0)
 		{
-			REGISTER(INT_BASEADDRESS, Dis_Offset[Int_EnIdx]) |= Int_EnBit;
+			REGISTER(INT_BASEADDRESS, Dis_Offset[Int_EnIdx]) |= (1 << Int_EnBit);
 		}
 		// enable interrupt
 		else 
