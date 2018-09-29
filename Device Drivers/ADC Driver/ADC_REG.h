@@ -15,6 +15,8 @@
   */
 #define ADC0BASEADDRESS 0x40038000
 #define ADC1BASEADDRESS	0x40039000
+#define INT_BASEADDRESS 0xE000E000
+
 
 
 
@@ -96,8 +98,8 @@
  ************************************************************************************************/
 #define ADC0						0x00010000		// ADC0 Clock Gating Control
 #define ADC1 						0x00020000		// ADC1 Clock Gating Control
-#define MAXADC0SPD 			0x00000300		// ADC0 Sample Speed
-#define MAXADC1SPD 			0x00000C00		// ADC1 Sample Speed
+#define MAXADC0SPD 			8							// ADC0 Sample Speed shift
+#define MAXADC1SPD 			10						// ADC1 Sample Speed shift
 /**********************************************************************************************************/
 
 /******************************************** Sample Sequencer priority Bits***************************************************************/
@@ -125,6 +127,20 @@
 #define MUX5 0x00F00000
 #define MUX6 0x0F000000
 #define MUX7 0xF0000000
+
+
+/********************************************************************************
+ * The Following are defined for each nibble for each Sample 
+ ********************************************************************************/
+#define S0BITSHIFT 0
+#define S1BITSHIFT 4
+#define S2BITSHIFT 8
+#define S3BITSHIFT 12
+#define S4BITSHIFT 16
+#define S5BITSHIFT 20
+#define S6BITSHIFT 24
+#define S7BITSHIFT 28
+
 
 /******************************************************************************
  * The Following are defined for the bit fields in enable interrupt registers
@@ -161,11 +177,14 @@
 /******************************************************************************
  * The Following are defined for the bit fields in ADCEMUX register (page: 830).
  ******************************************************************************/
-#define EM0 0x0000000F						// SS3 trigger select.
-#define EM1	0x000000F0						// SS2 trigger select.
-#define EM2 0x00000F00						// SS1 trigger select.
-#define EM3 0x0000F000						// SS0 trigger select.
-
+#define EM0				  0x0000000F						// SS3 trigger select.
+#define EM1					0x000000F0						// SS2 trigger select.
+#define EM2 				0x00000F00						// SS1 trigger select.
+#define EM3 				0x0000F000						// SS0 trigger select.
+#define EM0SHIFT		0											// Starting bit of event multiplexer SS0.
+#define EM1SHIFT		4											// Starting bit of event multiplexer SS1.
+#define EM2SHIFT    8											// Starting bit of event multiplexer SS2.
+#define EM3SHIFT    12										// Starting bit of event multiplexer SS3.
 /******************************************************************************
  * The Following are defined for the bit fields in ADCISC register (page: 825).
  ******************************************************************************/
@@ -183,5 +202,14 @@
 #define SS1 1
 #define SS2 2
 #define SS3 3
-/*********************************************************************************************************/
+
+
+/***************************************************************************************************
+ * ADC Interrupt mask bits
+ ***************************************************************************************************/
+#define MASK0	0
+#define MASK1 1
+#define MASK2	2
+#define MASK3	3
+	
 #endif

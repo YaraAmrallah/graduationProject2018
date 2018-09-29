@@ -14,7 +14,7 @@
 #include <stdarg.h>
 #include "ADC_REG.h"
 #include "ADC_Confg.h" 
-
+#include "../interrupt/interrupt.h"
 
 
 
@@ -113,4 +113,13 @@ ADC_FunctionReturn ADC_ProcessorInitiateSampling(uint8_t ADC_GroupIdx);
  * Clear ADIF Bit (in Polling)
  **************************************************************************************************************************/
 ADC_FunctionReturn ADC_SampleAcknowledge(uint8_t ADC_GroupIdx);
+
+
+/*************************************************************************************************
+ * This Function Enable the interrupt 
+ *************************************************************************************************/
+ADC_FunctionReturn ADC_EnableInterrupt(uint8_t ADC_GroupIdx, uint8_t PRI);
+
+	
+ 
 #endif

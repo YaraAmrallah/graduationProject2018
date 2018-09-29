@@ -26,8 +26,8 @@
   * the coming two macros used in specifying the sample speed of the modules
   * less speed less power consume, longer sampling time and more accurate conversion
   */
-#define ADC0MAXSAMPLING ADC_125K
-#define ADC1MAXSAMPLING ADC_125K
+#define ADC0MAXSAMPLING ADC_500K
+#define ADC1MAXSAMPLING ADC_250K
 /**************************************************************************************/
  
  
