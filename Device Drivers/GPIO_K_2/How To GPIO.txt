@@ -1,0 +1,39 @@
+in your main.c 
+#include "GPIO.h"
+Add all your pins with the desired options in GPIO_Cfg.c
+inside void main(){
+GPIO_Init();
+GPIO_SetAlternateFunction(a,b);
+a= group ID ; which is the struct index located in GPIO_Cfg.c 
+b= 
+  0 -> use the pin as normal GPIO
+  otherwise -> use the specific peripheral to the pin >note that AFSEL must be set to 1 in GPIO_Cfg.c<
+  you must check the number you put according to the data sheet & pin number
+GPIO_SetInterrupt_Event(c,d,e)
+c= group ID
+d=Interrupt event, U need to declare an instance of Interrupt event type in your main.c and input one of its values as a function parameter
+e=mask status ,U need to declare an instance of GPIO_Int_maskStatus and use one of its values as a function parameter
+
+Gpio_write(f,g)
+f=group ID
+g=data to write
+
+Gpio_read(h)
+h=group ID
+
+GPIO_ClerInterruptFlag(i)
+i=groupID
+This is only used after MIS flag  is set (in case of polling).
+
+GPIO_GetInterruptStatus(o,q)
+this functions perform flag polling.
+o= group ID
+q= u need to declare a variable in your main.c and pass its address here in order to have the value of the flags back in your main code
+
+GetPinNumber(y)
+y=pinMask
+Converts mask into a number.
+Mask: shift amount
+
+}
+
