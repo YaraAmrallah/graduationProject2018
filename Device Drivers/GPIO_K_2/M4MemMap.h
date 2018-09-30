@@ -41,8 +41,6 @@ typedef volatile uint32_t * const M4_PrefRegType;
 #define PRI_REG_BASE 0x400
 #define PRI_REG_NUM(INT_NUM) (INT_NUM/4) //63-29=34 (tarteeb el registers in data sheet)
 #define PRI_REG(INT_NUM) *((M4_PrefRegType)((PRI_REG_NUM(INT_NUM) * 4) + PRI_REG_BASE + M4_PREF_BASE_ADD))//addition of any number divided by 4
-//#define SET_INT_PRI(INT_NUM,PRI_NUM)  PRI_REG(INT_NUM) &= (0xFFFFFFF0 << ((INT_NUM) % 4));\
-                                      PRI_REG(INT_NUM) |= ((PRI_NUM & 0x0f) << ((INT_NUM) % 4))
 #define SET_INT_PRI(INT_NUM,PRI_NUM) PRI_REG(INT_NUM) &= (0xF0 <<  (8*(INT_NUM%4)+5) );\
                                      PRI_REG(INT_NUM) |= ((PRI_NUM & 0X0F)<< 8*(INT_NUM%4)+5)
 

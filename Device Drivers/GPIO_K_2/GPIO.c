@@ -59,12 +59,7 @@ static const uint32_t PortsBaseAddressLut[PORTS_NUMBER] =
 
 /*Internal symbols*/
 #define GPIO_PORT_UNLOCK_VALUE 0x4C4F434B
-#define GPIO_INT_SENCE_BIT_NUM 1
-#define GPIO_INT_SENCE_MASK (1 << GPIO_INT_EVENT_BIT_NUM)
-#define GPIO_INT_EVENT_BIT_NUM 0
-#define GPIO_INT_EVENT_MASK (1 << GPIO_INT_EVENT_BIT_NUM)
-#define GPIO_INT_BE_BIT_NUM 2
-#define GPIO_INT_BR_MASK (1 << GPIO_INT_BE_BIT_NUM)
+
 
 static uint8_t GPIO_GroupState[GPIO_GROUPS_NUMBER] = {0};
 static uint8_t GetPinNumber(uint8_t PinMask);
@@ -77,7 +72,6 @@ GPIO_CheckType GPIO_Init(void)
 	uint8_t ErrorFlag = 0;
 	GPIO_CheckType RetVar;
 	const GPIO_CfgType * CfgPtr;
-
 
 	for(LoopIndex = 0; (LoopIndex < GPIO_GROUPS_NUMBER) && (ErrorFlag == 0); LoopIndex ++)
 	{
