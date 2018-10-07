@@ -14,7 +14,7 @@
 #include <stdarg.h>
 #include "ADC_REG.h"
 #include "ADC_Confg.h" 
-#include "../interrupt/interrupt.h"
+#include "M4MemMap.h"
 
 
 
@@ -91,7 +91,7 @@ ADC_FunctionReturn ADC_SSnControl(uint8_t ADC_GroupIdx,uint8_t ADC_NoSamples, ..
 /*********************************************************************************************************
  * Get Sample From FIFO
  *********************************************************************************************************/
-ADC_FunctionReturn ADC_SSFIFO(uint8_t ADC_GroupIdx,uint32_t* ADC_SampleRes);
+ADC_FunctionReturn ADC_SSnFIFO(uint8_t ADC_GroupIdx,uint32_t* ADC_SampleRes);
 
 
 /*********************************************************************************************

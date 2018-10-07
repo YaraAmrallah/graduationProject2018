@@ -92,25 +92,16 @@ static const uint8_t ADC_MaskBits[]={MASK0, MASK1, MASK2, MASK3};
  ******************************************************************************/
 static const uint8_t ADC_ISCBitFields[]={IN0, IN1, IN2, IN3};
 
-static const uint32_t PRI_OFFSET[]={INTPRI0, INTPRI1, INTPRI2,
-																		INTPRI3, INTPRI4, INTPRI5,
-																		INTPRI6, INTPRI7, INTPRI8,
-																		INTPRI9, INTPRI10, INTPRI11,
-																		INTPRI12, INTPRI13, INTPRI14,
-																		INTPRI15, INTPRI16};
-static const uint32_t EN_OFFSET[]={INTEN0, INTEN1, INTEN2, INTEN3};
-
-static const uint32_t DIS_OFFSET[]={INTDIS0, INTDIS1, INTDIS2, INTDIS3};
 
 											
-/** 
+/*********************************************************************************************************** 
   * this function is used within this file only (static function)
   * This Function is used to check Sequencers priorities it has to be different and takes values from 0 to 3
   * returns 0 completed without error
   * return  completed with error
   * Prioritization look page 801
   * Multiple active sample sequencer with the same priority do not provide consistent results
-  */
+  **********************************************************************************************************/
 static ADC_FunctionReturn ADC_PrioritiesCheck(uint8_t Copy_Pri0, uint8_t Copy_Pri1, uint8_t Copy_pri2, uint8_t Copy_Pri3)
 {
 	
@@ -227,7 +218,7 @@ static ADC_FunctionReturn ADC_ConfigureModule1(void)
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
-// SSnMUX function for choosing the inpput channel
+// SSnMUX function for choosing the input channel
 /**
 	* This Function used to choose the input channel for the coming sequence for sequencer three
 	*/
@@ -355,10 +346,8 @@ static ADC_FunctionReturn ADC_SS0MUX(uint8_t ADC_GroupIdx)
 }
 /************************************************************************************************************/
 /************************************************************************************************************/
-/************************************************************************************************************/
 
 
-/************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 // Setting Sample Sequencer Control Bits 
@@ -605,7 +594,7 @@ ADC_FunctionReturn ADC_GetTriggerState(uint8_t ADC_GroupIdx,uint8_t *ADC_Trigger
 
 
 // Get sample from FIFO
-ADC_FunctionReturn  ADC_SSFIFO(uint8_t ADC_GroupIdx,uint32_t* ADC_SampleRes)
+ADC_FunctionReturn  ADC_SSnFIFO(uint8_t ADC_GroupIdx,uint32_t* ADC_SampleRes)
 {
 		ADC_FunctionReturn Function_ValidationCheck = ADC_OK;
 		if(ADC_GroupIdx < GROUP0 || ADC_GroupIdx >= ADCNUMBEROFGROUPS)
@@ -756,11 +745,10 @@ ADC_FunctionReturn ADC_ProcessorInitiateSampling(uint8_t ADC_GroupIdx)
 }
 
 
-
-
-
-
-
+/***************************************************************************************
+ * This function used to enable interrupt for specific group
+ * takes group id, the interrupt priority
+ ***************************************************************************************/
  ADC_FunctionReturn ADC_EnableInterrupt(uint8_t ADC_GroupIdx, uint8_t PRI)
 {
 	ADC_FunctionReturn Function_ValidationCheck= ADC_OK;
@@ -771,8 +759,11 @@ ADC_FunctionReturn ADC_ProcessorInitiateSampling(uint8_t ADC_GroupIdx)
 	REGISTER(ADC_ModuleBase[ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId],ADCIM) |= 
 	(1 << ADC_GroupConfg[ADC_GroupIdx].ADC_SSId);
 	
-	Interrupt_EnableSetPri(
-	ADC_InterruptNum[4*ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId+ADC_GroupConfg[ADC_GroupIdx].ADC_SSId], PRI, 1);
+	/*Interrupt_EnableSetPri(
+	ADC_InterruptNum[4*ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId+ADC_GroupConfg[ADC_GroupIdx].ADC_SSId], PRI, 1);*/
+		
+		SET_INT_PRI(ADC_InterruptNum[4*ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId+ADC_GroupConfg[ADC_GroupIdx].ADC_SSId],PRI);
+		EN_INT(ADC_InterruptNum[4*ADC_GroupConfg[ADC_GroupIdx].ADC_ModuleId+ADC_GroupConfg[ADC_GroupIdx].ADC_SSId]);
 	}
 	return Function_ValidationCheck;
 }
