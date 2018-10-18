@@ -32,15 +32,15 @@ static const uint32_t SSI_ModulesBaseAddressLut[SSI_MODULES]=
 //***********************************************************************************************************************************************
 #define SSICR0_REG(MODULE)				(*(SSI_RegAddType)SSI_REG_ADDRESS(MODULE,0x000))		/// SSI Control 0.
 #define SSICR1_REG(MODULE)				(*(SSI_RegAddType)SSI_REG_ADDRESS(MODULE,0x004))		/// SSI COntrol 1.
-#define SSIDR_REG(MODULE)					(*(SSI_RegAddType)SSI_REG_ADDRESS(MODULE,0x008))		/// SSI Data.
-#define SSISR_REG(MODULE)					(*(SSI_RegAddType)SSI_REG_ADDRESS(MODULE,0x00C))		/// SSI Status.
+#define SSIDR_REG(MODULE)				(*(SSI_RegAddType)SSI_REG_ADDRESS(MODULE,0x008))		/// SSI Data.
+#define SSISR_REG(MODULE)				(*(SSI_RegAddType)SSI_REG_ADDRESS(MODULE,0x00C))		/// SSI Status.
 #define SSICPSR_REG(MODULE)				(*(SSI_RegAddType)SSI_REG_ADDRESS(MODULE,0x010))		/// SSI clock Pre-scale.
 #define SSIIM_REG(MODULE) 				(*(SSI_RegAddType)SSI_REG_ADDRESS(MODULE,0x014))		/// SSI Interrupt Mask.
 #define SSIRIS_REG(MOCULE)				(*(SSI_RegAddType)SSI_REG_ADDRESS(MODULE,0x018))		/// SSI raw interrupt status
 #define SSIMIS_REG(MODULE)				(*(SSI_RegAddType)SSI_REG_ADDRESS(MODULE,0x01C))		/// SSI Masked Interrupt status
 #define SSIICR_REG(MODULE)				(*(SSI_RegAddType)SSI_REG_ADDRESS(MODULE,0x020))		/// SSI Interrupt Clear
-#define SSIDMACTL_REG(MODULE)			(*(SSI_RegAddType)SSI_REG_ADDRESS(MODULE,0x024))		/// SSI DMA Control
-#define SSICC_REG(MODULE)					(*(SSI_RegAddType)SSI_REG_ADDRESS(MODULE,0x028))		/// SSI Clock Configuration
+#define SSIDMACTL_REG(MODULE)				(*(SSI_RegAddType)SSI_REG_ADDRESS(MODULE,0x024))		/// SSI DMA Control
+#define SSICC_REG(MODULE)				(*(SSI_RegAddType)SSI_REG_ADDRESS(MODULE,0x028))		/// SSI Clock Configuration
 
 
 
@@ -54,11 +54,11 @@ static const uint32_t SSI_ModulesBaseAddressLut[SSI_MODULES]=
 #define 		SPO				0x00000040																	/// SSI Clock Polarity
 #define 		SPH				0x00000080																	/// SSI Serial Clock Phase
 #define 		SCR				0x0000FF00																	/// SSI Serial Clock Rate 
-#define			DSS_BIT			0																		/// Start Location of DSS
-#define			FRF_BIT			5																		/// Start location of FRF
-#define 		SPO_BIT			6																		
-#define			SPH_BIT			7
-#define 		SCR_BIT			8
+#define			DSS_BIT				0																		/// Start Location of DSS
+#define			FRF_BIT				5																		/// Start location of FRF
+#define 		SPO_BIT				6																		
+#define			SPH_BIT				7
+#define 		SCR_BIT				8
 	
 
 //************************************************************************************************************************************************
@@ -66,16 +66,16 @@ static const uint32_t SSI_ModulesBaseAddressLut[SSI_MODULES]=
 // The following are defined for the bit fields in the SSICR1 register.
 //
 //*************************************************************************************************************************************************
-#define 	  LBM 	   	0x00000001																		/// SSI loop_back mood.
+#define 	  	LBM 	   		0x00000001																		/// SSI loop_back mood.
 #define 		SSE		   	0x00000002																		/// SSI Synchronous Serial Port Enable.
 #define 		MS		   	0x00000004																		/// SSI Master/ Slave Select.
 #define 		SOD		   	0x00000008																		/// SSI Slave mode output disable.
 #define 		EOT		   	0x00000010																		/// End of transmission.
-#define 		LBM_BIT    	0
-#define 		SSE_BIT	   	1
-#define			MS_BIT	   	2
-#define 		SOD_BIT	   	3	
-#define 		EOT_BIT	   	4
+#define 		LBM_BIT    		0
+#define 		SSE_BIT	   		1
+#define			MS_BIT	   		2
+#define 		SOD_BIT	   		3	
+#define 		EOT_BIT	   		4
 
 
 //************************************************************************************************************************************************
@@ -83,16 +83,16 @@ static const uint32_t SSI_ModulesBaseAddressLut[SSI_MODULES]=
 // The following are defined for the bit fields in the SSISR register.
 //
 //************************************************************************************************************************************************
-#define 		BUSY	  0x000000010																		/// SSI Busy BIT.
+#define 		BUSY	 	  0x000000010																		/// SSI Busy BIT.
 #define 		RFF		  0x000000008																		/// SSI Receive FIFO full.
 #define 		RNE		  0x000000004																		/// SSI receive FIFO Not Empty.
 #define 		TNF		  0x000000002																		/// SSI transmit FIFO not full.
 #define 		TFE		  0x000000001																		/// SSI transmit FIFO empty.
-#define			BUSY_BIT  4
-#define 		RFF_BIT	  3
-#define			RNE_BIT   2
-#define 		TNE_BIT	  1
-#define 		TFE_BIT	  0	
+#define			BUSY_BIT 	  4
+#define 		RFF_BIT	  	  3
+#define			RNE_BIT   	  2
+#define 		TNE_BIT	  	  1
+#define 		TFE_BIT	  	  0	
 
 
 //************************************************************************************************************************************************
@@ -165,7 +165,7 @@ static const uint32_t SSI_ModulesBaseAddressLut[SSI_MODULES]=
 // The following are defined for the bit fields in the SSIDMACTL register.
 //
 //************************************************************************************************************************************************
-#define     RXDMAE		0x00000001																				/// SSI Receive DMA Enable.
+#define    	RXDMAE		0x00000001																				/// SSI Receive DMA Enable.
 #define 	TXDMAE		0x00000002																				/// SSI Transmit DMA Enable.
 
 
