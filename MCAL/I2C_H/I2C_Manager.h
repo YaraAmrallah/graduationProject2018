@@ -1,12 +1,11 @@
 #ifndef I2C_MANAGER_H
 #define I2C_MANAGER_H
-
-#include "I2C_Driver.h"
+#include "I2C.h"
 
 typedef enum
 {
-  I2C_WRITE = 0,
-	I2C_READ  = 1
+   I2C_WRITE = 0,
+	 I2C_READ  = 1
 }I2C_Direction;
 
 
@@ -20,9 +19,9 @@ typedef enum
     I2C_SEND_SLAVE_ADDRESS          = 4 ,
     I2C_CLEAR_ADDR_BIT              = 5 ,
     I2C_SEND_SLAVE_ADDRESS_STATUS   = 6 ,
-    I2C_SEND_DATA                  = 7 ,
-    I2C_SEND_DATA_STATUS           = 8 ,
-    I2C_SEND_DATA_MANAGER          = 9 ,
+    I2C_SEND_DATA                   = 7 ,
+    I2C_SEND_DATA_STATUS            = 8 ,
+    I2C_SEND_DATA_MANAGER           = 9 ,
     I2C_GET_DATA_MANAGER            = 10,
     I2C_GET_SINGLE_BYTE_STATUS      = 11,
     I2C_GET_SINGLE_BYTE             = 12,

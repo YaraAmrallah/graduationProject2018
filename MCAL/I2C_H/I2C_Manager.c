@@ -1,11 +1,13 @@
 #include "I2C_Manager.h"
-
+//Flags
 static uint8_t I2C_Write;
 static uint8_t I2C_Read;
+//variables
 static uint8_t I2C_SlaveAddress;
 static uint8_t I2C_ByteCount;
 static uint8_t* I2C_DataPointer;
 
+//Function write that will be used in the Main
 void I2C_RequestWrite(uint8_t SlaveAddress, uint8_t* DataPointer, uint8_t NumOfBytes)
 {
     I2C_Write = 1;
@@ -24,9 +26,11 @@ void I2C_RequestRead(uint8_t SlaveAddress, uint8_t* DataPointer, uint8_t NumOfBy
 void I2C_Manager(void)
 {
     I2C_CheckType DriverReturnStatus = I2C_NOK;
-  
+   //setting the intial states to un intialize
+
     static I2C_States ManagerState = I2C_UN_INIT;
-    static I2C_States OldState = I2C_UN_INIT;
+    static I2C_States OldState     = I2C_UN_INIT;
+    //taking the group struct
     const I2C_ConfigType* ConfigPtr = &I2C_ConfigParam[0];
     
     switch(ManagerState)
@@ -35,10 +39,12 @@ void I2C_Manager(void)
         {
             if(I2C_InitFlag == 1)
             {
+                //once I2C initalization finishes
                 ManagerState = I2C_IDLE;
             }
             else
             {
+                //IF Init is intialised zero , it will enter this state
                 ManagerState = I2C_UN_INIT;
             }
         }
@@ -71,7 +77,7 @@ void I2C_Manager(void)
         case I2C_START_STATUS:
         {
            // DriverReturnStatus = I2C_StartStatus(0);
-            DriverReturnStatus = I2C_CheckTypeI2C_CHECKSTATUS(0,I2C_Start);
+            DriverReturnStatus = I2C_CHECKSTATUS(0,I2C_Start);
             if(DriverReturnStatus == I2C_StartOK)
             {
                 ManagerState = I2C_SEND_SLAVE_ADDRESS;
@@ -102,12 +108,12 @@ void I2C_Manager(void)
         case I2C_SEND_SLAVE_ADDRESS_STATUS:
         {
          //   DriverReturnStatus = I2C_SendSlaveAddressStatus(0);
-              DriverReturnStatus = I2C_CheckTypeI2C_CHECKSTATUS(0,I2C_SendSlaveAddress);
+              DriverReturnStatus = I2C_CHECKSTATUS(0,I2C_SendSlaveAdd);
             if(DriverReturnStatus == I2C_SendSlaveAddressOK)
             {
                 if(I2C_Write == 1)
                 {
-                    ManagerState = I2C_CLEAR_ADDR_BIT;
+                    ManagerState =I2C_SEND_DATA;
                 }
                 else if(I2C_Read == 1)
                 {
@@ -122,7 +128,7 @@ void I2C_Manager(void)
             }
         }
         break;
-
+     /*I2C clear bit state here  is used in multiple reads*/
         case I2C_CLEAR_ADDR_BIT:
         {
             I2C_Clear_ADDR(0);
@@ -151,11 +157,11 @@ void I2C_Manager(void)
         case I2C_SEND_DATA_STATUS:
         {
            // DriverReturnStatus = I2C_PlaceDataStatus(0);
-              DriverReturnStatus = I2C_CheckTypeI2C_CHECKSTATUS(0,I2C_SendDATA);
+              DriverReturnStatus = I2C_CHECKSTATUS(0,I2C_SendDATAA);
 
             if(DriverReturnStatus == I2C_SendDATAOK)
             {
-                ManagerState = SEND_DATA_MANAGER;
+                ManagerState = I2C_SEND_DATA_MANAGER;
             }
             else
             {
@@ -253,7 +259,7 @@ void I2C_Manager(void)
         case I2C_GET_SINGLE_BYTE_STATUS:
         {
           //  DriverReturnStatus = I2C_GetDataStatus(0);
-               DriverReturnStatus = I2C_CheckTypeI2C_CHECKSTATUS(0,I2C_GetData);   
+               DriverReturnStatus = I2C_CHECKSTATUS(0,I2C_GetDataa);   
             if(DriverReturnStatus == I2C_GetDataOK)
             {
                 ManagerState = I2C_GET_SINGLE_BYTE;
@@ -276,7 +282,7 @@ void I2C_Manager(void)
         case I2C_GET_MULTI_BYTE_STATUS:
         {
             //DriverReturnStatus = I2C_GetDataStatus(0);
-            DriverReturnStatus = I2C_CheckTypeI2C_CHECKSTATUS(0,I2C_GetData); 
+            DriverReturnStatus =I2C_CHECKSTATUS(0,I2C_GetDataa); 
             if(DriverReturnStatus == I2C_GetDataOK)
             {
                 ManagerState = I2C_GET_MULTI_BYTES;

@@ -14,23 +14,18 @@ const I2C_ConfigType I2C_ConfigParam[I2C_PERIPHERAL_NUMBER]=
 {
 	{
 		2,
-		
-
 		I2C_1,
-   278000,    
+        100000,    
 		
 		PERIPHERAL_CLOCK_16MHz,
 		
-
-       MASTER,
+        MASTER,
 		
 		STANDARD_MODE,
 		
 		DISABLE_GENERAL_CALL,
 
 		I2C_TxDone,
-
-
 		I2C_RxDone
 	}
 };

@@ -18,7 +18,7 @@ I2C_CheckType I2C_Init(void)
    if( (ConfigPtr->	I2C_FrequencyOf_SCL >= MAX_SCL_FREQUENCY_SM)&&(ConfigPtr->I2C_FrequencyOf_SCL <= MAX_SCL_FREQUENCY_FM) )
 		 {			  
 
-			GPIO_SetAlternFuntion(ConfigPtr->I2C_GPIO_Structure_ID ,AF_I2C1);
+			GPIO_SetAlternFuntion(ConfigPtr->I2C_GPIO_Structure_ID ,0xC0);
 			 
 			I2CRCGC |= (((uint32_t)1) <<(ConfigPtr->I2C_Peripheral_ID));	
 			I2CMCR(ConfigPtr->I2C_Peripheral_ID)  |= (ConfigPtr-> I2C_TYPE);
@@ -72,12 +72,17 @@ I2C_CheckType I2C_Init(void)
  }*/
  
  
- void I2C_SendSlaveAddress(uint8_t SlaveAddress,uint8_t WriteOrRead, uint8_t Peripheral_ID)
+ void I2C_SendSlaveAddress (uint8_t SlaveAddress,uint8_t WriteOrRead, uint8_t Peripheral_ID)
 	{
         const I2C_ConfigType* ConfigPtr = &I2C_ConfigParam[Peripheral_ID];
         I2CMSA(ConfigPtr->I2C_Peripheral_ID) = (SlaveAddress|WriteOrRead);
 	}
 
+	void I2C_Clear_ADDR(uint8_t Peripheral_ID)
+{
+        const I2C_ConfigType* ConfigPtr = &I2C_ConfigParam[Peripheral_ID];
+        I2CMSA(ConfigPtr->I2C_Peripheral_ID) = 0;
+}
 /*
 I2C_CheckType I2C_SendSlaveAddressStatus(uint8_t Peripheral_ID)
 	{
@@ -159,13 +164,13 @@ I2C_CheckType I2C_GetDataStatus(uint8_t Peripheral_ID)
 */
 
 
-	I2C_CheckTypeI2C_CHECKSTATUS(uint8_t Peripheral_ID,I2C_Checkstatus Status)
+	I2C_CheckType I2C_CHECKSTATUS(uint8_t Peripheral_ID,I2C_Checkstatus Status)
 	{
 
 
           I2C_CheckType RetVal;
 	      const I2C_ConfigType* ConfigPtr = &I2C_ConfigParam[Peripheral_ID];
-	      I2C_Checkstatus x = Status,
+	      I2C_Checkstatus x = Status;
  switch(x)
  {
 
@@ -184,7 +189,7 @@ I2C_CheckType I2C_GetDataStatus(uint8_t Peripheral_ID)
 
    }break;
 
- case I2C_SendSlaveAddress:
+ case I2C_SendSlaveAdd:
    {
 			   while(((I2CMCS(ConfigPtr->I2C_Peripheral_ID)) & (1<<I2C_BUS_BUSY)) == (1<<I2C_BUS_BUSY	));//WAIT UNTIL BUS IS NOT BUSY
 			   
@@ -200,7 +205,7 @@ I2C_CheckType I2C_GetDataStatus(uint8_t Peripheral_ID)
 
     }break;
 
-     case I2C_SendDATA:
+     case I2C_SendDATAA:
    {
 	       while(((I2CMCS(ConfigPtr->I2C_Peripheral_ID)) & (1<<I2C_BUS_BUSY)) == (1<<I2C_BUS_BUSY	));//WAIT UNTIL BUS IS NOT BUSY
 	       
@@ -216,11 +221,11 @@ I2C_CheckType I2C_GetDataStatus(uint8_t Peripheral_ID)
 
     }break;
 
-     case I2C_GetData:
+     case I2C_GetDataa:
    {
 	      while(((I2CMCS(ConfigPtr->I2C_Peripheral_ID)) & (1<<I2C_BUS_BUSY)) == (1<<I2C_BUS_BUSY	));//WAIT UNTIL BUS IS NOT BUSY
  
-    if(((I2CMCS(ConfigPtr->I2C_Peripheral_ID) & (1<<I2C_DATA_ACK)))&& ((I2CMCS(ConfigPtr->I2C_Peripheral_ID) & (1<<I2C_ERROR)))==0)
+    if( ((I2CMCS(ConfigPtr->I2C_Peripheral_ID) & (1<<I2C_ERROR)))==0)
 		  {
 			RetVal = I2C_GetDataOK;
 		  }
@@ -233,13 +238,10 @@ I2C_CheckType I2C_GetDataStatus(uint8_t Peripheral_ID)
     }break;
 
 
-     return RetVal;
+    
  }
-
-            
-
-	}
-
+  return RetVal;
+}
 void I2C_GenerateStop(uint8_t Peripheral_ID)
 	{
        const I2C_ConfigType* ConfigPtr = &I2C_ConfigParam[Peripheral_ID];

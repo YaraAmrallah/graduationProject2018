@@ -19,8 +19,8 @@ typedef volatile uint32_t* const I2C_RegisterAddressType;
  */
 
  #define PERIPHERAL_BASE    						(0x40020000U)//I2C0
- #define RCC_BASE1								    (0x400FE000U)
- #define RCC_I2C_offset                              (0x620)
+ #define RCC_BASE1								      (0x400FE000U)
+ #define RCC_I2C_offset                    (0x620)
  #define I2C_BASE   				 		         PERIPHERAL_BASE
 
 
@@ -106,25 +106,25 @@ typedef volatile uint32_t* const I2C_RegisterAddressType;
 
 typedef enum
 {
-	I2C_NOK=0,
-	I2C_OK=1,
-	I2C_SendDATAOK=2,
-	I2C_SendDATANOK=3,
-	I2C_StartOK=4,
-	I2C_StartNOK=5,
-	I2C_SendSlaveAddressOK=6,
-    I2C_SendSlaveAddressNOK=7,
-    I2C_GetDataOK=8,
-    I2C_GetDataNOK=9
+			I2C_NOK=0,
+			I2C_OK=1,
+			I2C_SendDATAOK=2,
+			I2C_SendDATANOK=3,
+			I2C_StartOK=4,
+			I2C_StartNOK=5,
+			I2C_SendSlaveAddressOK=6,
+			I2C_SendSlaveAddressNOK=7,
+			I2C_GetDataOK=8,
+			I2C_GetDataNOK=9
 
 }I2C_CheckType;
 
 typedef enum
 {
-	I2C_Start=0,
-    I2C_SendSlaveAddress=1,
-	I2C_SendDATA=2,	
-    I2C_GetData=3
+	  I2C_Start=0,
+    I2C_SendSlaveAdd=1,
+	  I2C_SendDATAA=2,	
+    I2C_GetDataa=3
 }I2C_Checkstatus;
 
 
@@ -148,15 +148,15 @@ typedef enum
 
 typedef enum {
 
-I2C_START_GEN=3,
-I2C_STOP_GEN=5
+	I2C_START_GEN=3,
+	I2C_STOP_GEN=5
 }I2C_Control;
 typedef enum {
-I2C_RUN_EN=0,
-I2C_START=1,
-I2C_STOP=2,
-I2C_ACK=3,
-I2C_HS_EN=4
+	I2C_RUN_EN=0,
+	I2C_START=1,
+	I2C_STOP=2,
+	I2C_ACK=3,
+	I2C_HS_EN=4
 
 }I2C_position;
 typedef enum
@@ -209,16 +209,16 @@ typedef enum
 typedef struct
 {
 	uint8_t								I2C_GPIO_Structure_ID;
-	/*used to choose from I2Cx, x=1,2,3*/
-	Peripheral_ID						I2C_Peripheral_ID;
+	/*used to choose from I2Cx,  x=1,2,3*/
+	Peripheral_ID					    	  I2C_Peripheral_ID;
 	
-	uint32_t							I2C_FrequencyOf_SCL;
+	uint32_t						        	I2C_FrequencyOf_SCL;
 		
-	PeripheralFrequency					I2C_PeripheralFrequency;
+	PeripheralFrequency				   	I2C_PeripheralFrequency;
 	/**/
-	Type                         I2C_TYPE;
+	Type                           I2C_TYPE;
 	
-	SpeedMode						      	I2C_SpeedMode;
+	SpeedMode						         	I2C_SpeedMode;
 	/**/
 	GeneralCall							       I2C_GeneralCall;
 	/**/
@@ -251,7 +251,7 @@ extern void I2C_SendData(uint8_t* DataPtr, uint8_t Peripheral_ID);
 
 extern void I2C_GetData(uint8_t *Data, uint8_t Peripheral_ID);
 //extern I2C_CheckType I2C_GetDataStatus(uint8_t Peripheral_ID);
-extern I2C_CheckTypeI2C_CHECKSTATUS(uint8_t Peripheral_ID,I2C_Checkstatus Status);
+extern I2C_CheckType I2C_CHECKSTATUS(uint8_t Peripheral_ID,I2C_Checkstatus Status);
 extern void I2C_GenerateStop(uint8_t Peripheral_ID);
 
 
