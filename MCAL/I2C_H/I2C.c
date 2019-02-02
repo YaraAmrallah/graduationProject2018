@@ -15,12 +15,21 @@ I2C_CheckType I2C_Init(void)
 
     ConfigPtr = &I2C_ConfigParam[LoopIndex];
 
-   if( (ConfigPtr->	I2C_FrequencyOf_SCL >= MAX_SCL_FREQUENCY_SM)&&(ConfigPtr->I2C_FrequencyOf_SCL <= MAX_SCL_FREQUENCY_FM) )
+   if(((ConfigPtr->I2C_FrequencyOf_SCL<=MAX_SCL_FREQUENCY_SM && !ConfigPtr->I2C_SpeedMode)    ||
+           (ConfigPtr->I2C_FrequencyOf_SCL<=MAX_SCL_FREQUENCY_FM && ConfigPtr->I2C_SpeedMode)) )
 		 {			  
 
-			GPIO_SetAlternFuntion(ConfigPtr->I2C_GPIO_Structure_ID ,0xC0);
+           SYSCTL_RCGCGPIO_R |= 0x01; /* enable clock to GPIOA */
+           /* PORTA 7, 6 for I2C1 */
+           GPIO_PORTA_AFSEL_R |= 0xC0; /* PORTA 7, 6 for I2C1 */
+           GPIO_PORTA_PCTL_R &= ~0xFF000000; /* PORTA 7, 6 for I2C1 */
+           GPIO_PORTA_PCTL_R |= 0x33000000;
+           GPIO_PORTA_DEN_R |= 0xC0; /* PORTA 7, 6 as digital pins */
+           GPIO_PORTA_ODR_R |= 0x80; /* PORTA 7 as open drain */
+                //GPIO_SetAlternFuntion(ConfigPtr->I2C_GPIO_Structure_ID ,0xC0);
 			 
 			I2CRCGC |= (((uint32_t)1) <<(ConfigPtr->I2C_Peripheral_ID));	
+			//I2C1_MCR_R|= (ConfigPtr-> I2C_TYPE);
 			I2CMCR(ConfigPtr->I2C_Peripheral_ID)  |= (ConfigPtr-> I2C_TYPE);
 			I2CMTPR(ConfigPtr->I2C_Peripheral_ID) |= (ConfigPtr->I2C_PeripheralFrequency);
 			I2CMTPR(ConfigPtr->I2C_Peripheral_ID) |= ((ConfigPtr->I2C_SpeedMode)<<7);	

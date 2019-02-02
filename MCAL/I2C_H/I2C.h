@@ -2,7 +2,8 @@
 #define I2C_H
 
 #include <stdint.h>
-#include "GPIO.h"
+//#include "GPIO.h"
+#include "tm4c123gh6pm.h"
 #include "I2C_CFG.h"
 
 #define MAX_SCL_FREQUENCY_SM		(100000U)
@@ -18,10 +19,10 @@ typedef volatile uint32_t* const I2C_RegisterAddressType;
  ******************************************************************************
  */
 
- #define PERIPHERAL_BASE    						(0x40020000U)//I2C0
- #define RCC_BASE1								      (0x400FE000U)
- #define RCC_I2C_offset                    (0x620)
- #define I2C_BASE   				 		         PERIPHERAL_BASE
+ #define PERIPHERAL_BASE    					    	(0x40020000U)//I2C0
+ #define RCC_BASE1								        (0x400FE000U)
+ #define RCC_I2C_offset                                 (0x620)
+ #define I2C_BASE   				 		            PERIPHERAL_BASE
 
 
  /*
@@ -66,28 +67,28 @@ typedef volatile uint32_t* const I2C_RegisterAddressType;
  /************************************MASTER****************************/
   #define I2CRCGC                            *((I2C_RegisterAddressType) (RCC_BASE1 +RCC_I2C_offset ))
 
- #define I2CMSA(PERIPHERAL_ID)             *((I2C_RegisterAddressType) (I2C_BASE+(1000*PERIPHERAL_ID)+I2C_MSA_OFFSET))
- #define I2CMCS(PERIPHERAL_ID)             *((I2C_RegisterAddressType) (I2C_BASE+(1000*PERIPHERAL_ID)+I2C_MCS_OFFSET))
- #define I2CMDR(PERIPHERAL_ID)             *((I2C_RegisterAddressType) (I2C_BASE+(1000*PERIPHERAL_ID)+I2C_MDR_OFFSET))
- #define I2CMTPR(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(1000*PERIPHERAL_ID)+I2C_MTPR_OFFSET))
- #define I2CMIMR(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(1000*PERIPHERAL_ID)+I2C_MIMR_OFFSET))
- #define I2CMRIS(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(1000*PERIPHERAL_ID)+I2C_MRIS_OFFSET))
- #define I2CMMIS(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(1000*PERIPHERAL_ID)+I2C_MMIS_OFFSET))
- #define I2CMICR(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(1000*PERIPHERAL_ID)+I2C_MICR_OFFSET))
- #define I2CMCR(PERIPHERAL_ID)             *((I2C_RegisterAddressType) (I2C_BASE+(1000*PERIPHERAL_ID)+I2C_MCR_OFFSET))
- #define I2CMCLKOCNT(PERIPHERAL_ID)        *((I2C_RegisterAddressType) (I2C_BASE+(1000*PERIPHERAL_ID)+I2C_MCLKOCNT_OFFSET))
- #define I2CMBON(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(1000*PERIPHERAL_ID)+I2C_MBON_OFFSET))
- #define I2CMCR2(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(1000*PERIPHERAL_ID)+I2C_MCR2_OFFSET))
+ #define I2CMSA(PERIPHERAL_ID)             *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_MSA_OFFSET))
+ #define I2CMCS(PERIPHERAL_ID)             *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_MCS_OFFSET))
+ #define I2CMDR(PERIPHERAL_ID)             *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_MDR_OFFSET))
+ #define I2CMTPR(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_MTPR_OFFSET))
+ #define I2CMIMR(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_MIMR_OFFSET))
+ #define I2CMRIS(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_MRIS_OFFSET))
+ #define I2CMMIS(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_MMIS_OFFSET))
+ #define I2CMICR(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_MICR_OFFSET))
+ #define I2CMCR(PERIPHERAL_ID)             *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_MCR_OFFSET))
+ #define I2CMCLKOCNT(PERIPHERAL_ID)        *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_MCLKOCNT_OFFSET))
+ #define I2CMBON(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_MBON_OFFSET))
+ #define I2CMCR2(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_MCR2_OFFSET))
  /************************************SLAVE****************************/
- #define I2CSOAR(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(1000*PERIPHERAL_ID)+I2C_SOAR_OFFSET))
- #define I2CSCSR(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(1000*PERIPHERAL_ID)+I2C_SCSR_OFFSET))
- #define I2CSDR(PERIPHERAL_ID)             *((I2C_RegisterAddressType) (I2C_BASE+(1000*PERIPHERAL_ID)+I2C_SDR_OFFSET))
- #define I2CSIMR(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(1000*PERIPHERAL_ID)+I2C_SIMR_OFFSET))
- #define I2CSRIS(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(1000*PERIPHERAL_ID)+I2C_SRIS_OFFSET))
- #define I2CSMIS(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(1000*PERIPHERAL_ID)+I2C_SMIS_OFFSET))
- #define I2CICR(PERIPHERAL_ID)             *((I2C_RegisterAddressType) (I2C_BASE+(1000*PERIPHERAL_ID)+I2C_SICR_OFFSET))
- #define I2CSOAR2(PERIPHERAL_ID)           *((I2C_RegisterAddressType) (I2C_BASE+(1000*PERIPHERAL_ID)+I2C_SOAR2_OFFSET))
- #define I2CSACKCTL(PERIPHERAL_ID)         *((I2C_RegisterAddressType) (I2C_BASE+(1000*PERIPHERAL_ID)+I2C_SACKCTL_OFFSET))
+ #define I2CSOAR(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_SOAR_OFFSET))
+ #define I2CSCSR(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_SCSR_OFFSET))
+ #define I2CSDR(PERIPHERAL_ID)             *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_SDR_OFFSET))
+ #define I2CSIMR(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_SIMR_OFFSET))
+ #define I2CSRIS(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_SRIS_OFFSET))
+ #define I2CSMIS(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_SMIS_OFFSET))
+ #define I2CICR(PERIPHERAL_ID)             *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_SICR_OFFSET))
+ #define I2CSOAR2(PERIPHERAL_ID)           *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_SOAR2_OFFSET))
+ #define I2CSACKCTL(PERIPHERAL_ID)         *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_SACKCTL_OFFSET))
 
  /*
  ******************************************************************************
@@ -148,7 +149,7 @@ typedef enum
 
 typedef enum {
 
-	I2C_START_GEN=3,
+	I2C_START_GEN=7,
 	I2C_STOP_GEN=5
 }I2C_Control;
 typedef enum {
@@ -173,8 +174,8 @@ typedef enum
 }PeripheralEnable;
 typedef enum 
 {
-	MASTER=0x00000010,
-	SLAVE=0x00000020	
+	MASTER=0x10,
+	SLAVE=0x20
 }Type;
 
 typedef enum
@@ -208,19 +209,19 @@ typedef enum
 
 typedef struct
 {
-	uint8_t								I2C_GPIO_Structure_ID;
+	uint8_t							   I2C_GPIO_Structure_ID;
 	/*used to choose from I2Cx,  x=1,2,3*/
-	Peripheral_ID					    	  I2C_Peripheral_ID;
+	Peripheral_ID					   I2C_Peripheral_ID;
 	
-	uint32_t						        	I2C_FrequencyOf_SCL;
+	uint32_t						   I2C_FrequencyOf_SCL;
 		
-	PeripheralFrequency				   	I2C_PeripheralFrequency;
+	PeripheralFrequency			       I2C_PeripheralFrequency;
 	/**/
-	Type                           I2C_TYPE;
+	Type                               I2C_TYPE;
 	
-	SpeedMode						         	I2C_SpeedMode;
+	SpeedMode					       I2C_SpeedMode;
 	/**/
-	GeneralCall							       I2C_GeneralCall;
+	GeneralCall				           I2C_GeneralCall;
 	/**/
 	I2C_CallBackFunctionType			I2C_TransmissionDoneCallBack;
 
