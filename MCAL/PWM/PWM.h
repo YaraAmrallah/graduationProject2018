@@ -12,13 +12,14 @@
 #include "GPIO.h"
 
 #define PWM_MODULES 2U
+#define PWM_GEN 4U
 
-#define DIVISOR_BY_2   0x0
-#define DIVISOR_BY_4   0x1
-#define DIVISOR_BY_8   0x2
-#define DIVISOR_BY_16  0x3
-#define DIVISOR_BY_32  0x4
-#define DIVISOR_BY_64  0x5
+#define DIVISOR_BY_2   0xFFF1FFFF
+#define DIVISOR_BY_4   0xFFF3FFFF
+#define DIVISOR_BY_8   0xFFF5FFFF
+#define DIVISOR_BY_16  0xFFF7FFFF
+#define DIVISOR_BY_32  0xFFF9FFFF
+#define DIVISOR_BY_64  0xFFFFFFFF
 
 
 #define ENABLE  1
@@ -76,7 +77,7 @@ PWM_CheckType PWM_Init ();
 
 /* A function that generates a customized square wave using left aligned counter */
 /* Enter PWM group's ID, the Clock frequency in KiloHertz, the duty cycle per % */
-PWM_CheckType PWM_GenerateLASquareWave (uint8_t PWM_ID, uint16_t PWM_Freq, uint16_t PWM_DCycle );
+PWM_CheckType PWM_GenerateLASquareWave (uint8_t PWM_ID, uint16_t PWM_Freq, float PWM_DCycle );
 
 /* This function is meant to drive a DC Motor based on the frequency, the speed, the polarity given by the user*/
 /* N.B.: The selected frequency depends on the motor's type. DC motors have minimum and maximum frequency values to which they can respond */
@@ -88,7 +89,5 @@ PWM_CheckType PWM_SetInterruptEvent(uint8_t PWM_ID, PWM_IntEventType IntEvent);
 /*A function to clear a specific pin interrupt flag*/
 PWM_CheckType PWM_ClrInterruptFlag(uint8_t PWM_ID);
 
-PWM_CheckType PWM_Initiate_Servo (uint8_t PWM_ID );
 
-PWM_CheckType PWM_Rotate_Servo (uint8_t PWM_ID, uint8_t degree);
 #endif /* PWM_H_ */
