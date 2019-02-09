@@ -1,0 +1,293 @@
+******************************************************************************
+                  TI ARM Linker PC v16.9.6                     
+******************************************************************************
+>> Linked Sat Feb 02 02:54:09 2019
+
+OUTPUT FILE NAME:   <I2C_final.out>
+ENTRY POINT SYMBOL: "_c_int00"  address: 00000cdd
+
+
+MEMORY CONFIGURATION
+
+         name            origin    length      used     unused   attr    fill
+----------------------  --------  ---------  --------  --------  ----  --------
+  FLASH                 00000000   00040000  00000e7c  0003f184  R  X
+  SRAM                  20000000   00008000  00000225  00007ddb  RW X
+
+
+SEGMENT ALLOCATION MAP
+
+run origin  load origin   length   init length attrs members
+----------  ----------- ---------- ----------- ----- -------
+00000000    00000000    00000e80   00000e80    r-x
+  00000000    00000000    0000026c   0000026c    r-- .intvecs
+  0000026c    0000026c    00000bbc   00000bbc    r-x .text
+  00000e28    00000e28    0000001c   0000001c    r-- .const
+  00000e48    00000e48    00000038   00000038    r-- .cinit
+20000000    20000000    00000228   00000000    rw-
+  20000000    20000000    00000200   00000000    rw- .stack
+  20000200    20000200    0000001d   00000000    rw- .data
+  20000220    20000220    00000008   00000000    rw- .bss
+
+
+SECTION ALLOCATION MAP
+
+ output                                  attributes/
+section   page    origin      length       input sections
+--------  ----  ----------  ----------   ----------------
+.intvecs   0    00000000    0000026c     
+                  00000000    0000026c     tm4c123gh6pm_startup_ccs.obj (.intvecs)
+
+.text      0    0000026c    00000bbc     
+                  0000026c    000003b8     I2C_Manager.obj (.text)
+                  00000624    000003ac     I2C.obj (.text)
+                  000009d0    0000011c     main.obj (.text)
+                  00000aec    0000009c     rtsv7M4_T_le_v4SPD16_eabi.lib : memcpy_t2.obj (.text)
+                  00000b88    0000007a                                   : memset_t2.obj (.text)
+                  00000c02    00000002                                   : mpu_init.obj (.text)
+                  00000c04    00000070                                   : autoinit.obj (.text)
+                  00000c74    00000068                                   : copy_decompress_lzss.obj (.text:decompress:lzss)
+                  00000cdc    00000054                                   : boot.obj (.text)
+                  00000d30    00000054                                   : exit.obj (.text)
+                  00000d84    0000004c                                   : cpy_tbl.obj (.text)
+                  00000dd0    00000018                                   : args_main.obj (.text)
+                  00000de8    00000014                                   : _lock.obj (.text)
+                  00000dfc    0000000e                                   : copy_decompress_none.obj (.text:decompress:none)
+                  00000e0a    0000000c                                   : copy_zero_init.obj (.text:decompress:ZI)
+                  00000e16    0000000c     tm4c123gh6pm_startup_ccs.obj (.text)
+                  00000e22    00000004     rtsv7M4_T_le_v4SPD16_eabi.lib : pre_init.obj (.text)
+                  00000e26    00000002                                   : startup.obj (.text)
+
+.const     0    00000e28    0000001c     
+                  00000e28    00000014     I2C_CFG.obj (.const:I2C_ConfigParam)
+                  00000e3c    00000008     main.obj (.const:.string:$P$T0$1)
+
+.cinit     0    00000e48    00000038     
+                  00000e48    00000011     (.cinit..data.load) [load image, compression = lzss]
+                  00000e59    00000003     --HOLE-- [fill = 0]
+                  00000e5c    0000000c     (__TI_handler_table)
+                  00000e68    00000008     (.cinit..bss.load) [load image, compression = zero_init]
+                  00000e70    00000010     (__TI_cinit_table)
+
+.init_array 
+*          0    00000000    00000000     UNINITIALIZED
+
+.stack     0    20000000    00000200     UNINITIALIZED
+                  20000000    00000200     --HOLE--
+
+.data      0    20000200    0000001d     UNINITIALIZED
+                  20000200    0000000c     rtsv7M4_T_le_v4SPD16_eabi.lib : exit.obj (.data:$O1$$)
+                  2000020c    00000008                                   : _lock.obj (.data:$O1$$)
+                  20000214    00000004                                   : stkdepth_vars.obj (.data)
+                  20000218    00000002     I2C_Manager.obj (.data)
+                  2000021a    00000002     main.obj (.data)
+                  2000021c    00000001     I2C.obj (.data)
+
+.bss       0    20000220    00000008     UNINITIALIZED
+                  20000220    00000008     I2C_Manager.obj (.bss)
+
+MODULE SUMMARY
+
+       Module                         code   ro data   rw data
+       ------                         ----   -------   -------
+    .\
+       I2C_Manager.obj                952    0         10     
+       I2C.obj                        940    0         1      
+       tm4c123gh6pm_startup_ccs.obj   12     620       0      
+       main.obj                       284    8         2      
+       I2C_CFG.obj                    0      20        0      
+    +--+------------------------------+------+---------+---------+
+       Total:                         2188   648       13     
+                                                              
+    F:\self\Embedded\2018\RTOS_SSCS\ccsv7\tools\compiler\ti-cgt-arm_16.9.6.LTS\lib\rtsv7M4_T_le_v4SPD16_eabi.lib
+       memcpy_t2.obj                  156    0         0      
+       memset_t2.obj                  122    0         0      
+       autoinit.obj                   112    0         0      
+       copy_decompress_lzss.obj       104    0         0      
+       exit.obj                       84     0         12     
+       boot.obj                       84     0         0      
+       cpy_tbl.obj                    76     0         0      
+       _lock.obj                      20     0         8      
+       args_main.obj                  24     0         0      
+       copy_decompress_none.obj       14     0         0      
+       copy_zero_init.obj             12     0         0      
+       pre_init.obj                   4      0         0      
+       stkdepth_vars.obj              0      0         4      
+       mpu_init.obj                   2      0         0      
+       startup.obj                    2      0         0      
+    +--+------------------------------+------+---------+---------+
+       Total:                         816    0         24     
+                                                              
+       Stack:                         0      0         512    
+       Linker Generated:              0      53        0      
+    +--+------------------------------+------+---------+---------+
+       Grand Total:                   3004   701       549    
+
+
+LINKER GENERATED COPY TABLES
+
+__TI_cinit_table @ 00000e70 records: 2, size/record: 8, table size: 16
+	.data: load addr=00000e48, load size=00000011 bytes, run addr=20000200, run size=0000001d bytes, compression=lzss
+	.bss: load addr=00000e68, load size=00000008 bytes, run addr=20000220, run size=00000008 bytes, compression=zero_init
+
+
+LINKER GENERATED HANDLER TABLE
+
+__TI_handler_table @ 00000e5c records: 3, size/record: 4, table size: 12
+	index: 0, handler: __TI_decompress_lzss
+	index: 1, handler: __TI_decompress_none
+	index: 2, handler: __TI_zero_init
+
+
+GLOBAL SYMBOLS: SORTED ALPHABETICALLY BY Name 
+
+address   name                           
+-------   ----                           
+00000d31  C$$EXIT                        
+00000807  I2C_CHECKSTATUS                
+00000787  I2C_Clear_ADDR                 
+00000e28  I2C_ConfigParam                
+00000727  I2C_GenerateStart              
+00000909  I2C_GenerateStop               
+000007db  I2C_GetData                    
+00000625  I2C_Init                       
+2000021c  I2C_InitFlag                   
+000002c9  I2C_Manager                    
+0000029b  I2C_RequestRead                
+0000026d  I2C_RequestWrite               
+000009d9  I2C_RxDone                     
+000007af  I2C_SendData                   
+0000074f  I2C_SendSlaveAddress           
+00000931  I2C_TurnOffAcknowledge         
+00000969  I2C_TurnOnAcknowledge          
+000009d1  I2C_TxDone                     
+00000e17  ResetISR                       
+UNDEFED   SHT$$INIT_ARRAY$$Base          
+UNDEFED   SHT$$INIT_ARRAY$$Limit         
+20000200  __STACK_END                    
+00000200  __STACK_SIZE                   
+20000200  __STACK_TOP                    
+00000e70  __TI_CINIT_Base                
+00000e80  __TI_CINIT_Limit               
+00000e5c  __TI_Handler_Table_Base        
+00000e68  __TI_Handler_Table_Limit       
+00000c05  __TI_auto_init                 
+20000200  __TI_cleanup_ptr               
+00000c75  __TI_decompress_lzss           
+00000dfd  __TI_decompress_none           
+20000204  __TI_dtors_ptr                 
+20000208  __TI_enable_exit_profile_output
+ffffffff  __TI_pprof_out_hndl            
+ffffffff  __TI_prof_data_size            
+ffffffff  __TI_prof_data_start           
+00000000  __TI_static_base__             
+00000e0b  __TI_zero_init                 
+00000b89  __aeabi_memclr                 
+00000b89  __aeabi_memclr4                
+00000b89  __aeabi_memclr8                
+00000aed  __aeabi_memcpy                 
+00000aed  __aeabi_memcpy4                
+00000aed  __aeabi_memcpy8                
+00000b8b  __aeabi_memset                 
+00000b8b  __aeabi_memset4                
+00000b8b  __aeabi_memset8                
+ffffffff  __binit__                      
+ffffffff  __c_args__                     
+00000c03  __mpu_init                     
+20000000  __stack                        
+00000dd1  _args_main                     
+00000cdd  _c_int00                       
+2000020c  _lock                          
+00000df7  _nop                           
+00000def  _register_lock                 
+00000de9  _register_unlock               
+00000e27  _system_post_cinit             
+00000e23  _system_pre_init               
+20000210  _unlock                        
+00000d35  abort                          
+ffffffff  binit                          
+00000d85  copy_in                        
+00000d3d  exit                           
+00000000  g_pfnVectors                   
+000009e1  main                           
+20000214  main_func_sp                   
+00000aed  memcpy                         
+00000b91  memset                         
+
+
+GLOBAL SYMBOLS: SORTED BY Symbol Address 
+
+address   name                           
+-------   ----                           
+00000000  __TI_static_base__             
+00000000  g_pfnVectors                   
+00000200  __STACK_SIZE                   
+0000026d  I2C_RequestWrite               
+0000029b  I2C_RequestRead                
+000002c9  I2C_Manager                    
+00000625  I2C_Init                       
+00000727  I2C_GenerateStart              
+0000074f  I2C_SendSlaveAddress           
+00000787  I2C_Clear_ADDR                 
+000007af  I2C_SendData                   
+000007db  I2C_GetData                    
+00000807  I2C_CHECKSTATUS                
+00000909  I2C_GenerateStop               
+00000931  I2C_TurnOffAcknowledge         
+00000969  I2C_TurnOnAcknowledge          
+000009d1  I2C_TxDone                     
+000009d9  I2C_RxDone                     
+000009e1  main                           
+00000aed  __aeabi_memcpy                 
+00000aed  __aeabi_memcpy4                
+00000aed  __aeabi_memcpy8                
+00000aed  memcpy                         
+00000b89  __aeabi_memclr                 
+00000b89  __aeabi_memclr4                
+00000b89  __aeabi_memclr8                
+00000b8b  __aeabi_memset                 
+00000b8b  __aeabi_memset4                
+00000b8b  __aeabi_memset8                
+00000b91  memset                         
+00000c03  __mpu_init                     
+00000c05  __TI_auto_init                 
+00000c75  __TI_decompress_lzss           
+00000cdd  _c_int00                       
+00000d31  C$$EXIT                        
+00000d35  abort                          
+00000d3d  exit                           
+00000d85  copy_in                        
+00000dd1  _args_main                     
+00000de9  _register_unlock               
+00000def  _register_lock                 
+00000df7  _nop                           
+00000dfd  __TI_decompress_none           
+00000e0b  __TI_zero_init                 
+00000e17  ResetISR                       
+00000e23  _system_pre_init               
+00000e27  _system_post_cinit             
+00000e28  I2C_ConfigParam                
+00000e5c  __TI_Handler_Table_Base        
+00000e68  __TI_Handler_Table_Limit       
+00000e70  __TI_CINIT_Base                
+00000e80  __TI_CINIT_Limit               
+20000000  __stack                        
+20000200  __STACK_END                    
+20000200  __STACK_TOP                    
+20000200  __TI_cleanup_ptr               
+20000204  __TI_dtors_ptr                 
+20000208  __TI_enable_exit_profile_output
+2000020c  _lock                          
+20000210  _unlock                        
+20000214  main_func_sp                   
+2000021c  I2C_InitFlag                   
+ffffffff  __TI_pprof_out_hndl            
+ffffffff  __TI_prof_data_size            
+ffffffff  __TI_prof_data_start           
+ffffffff  __binit__                      
+ffffffff  __c_args__                     
+ffffffff  binit                          
+UNDEFED   SHT$$INIT_ARRAY$$Base          
+UNDEFED   SHT$$INIT_ARRAY$$Limit         
+
+[70 symbols]

@@ -79,7 +79,7 @@ static const uint32_t PWM_ModulesBaseAddressesLut[PWM_MODULES] =
 #define PWM_X_ISC_R(MODULE,X)            *((PWM_RegAddType) PWM_REG_ADDRESS(MODULE,0x04C + X*0x040))
 #define PWM_X_LOAD_R(MODULE,X)           *((PWM_RegAddType) PWM_REG_ADDRESS(MODULE,0x050 + X*0x040))
 #define PWM_X_COUNT_R(MODULE,X)          *((PWM_RegAddType) PWM_REG_ADDRESS(MODULE,0x054 + X*0x040))
-#define PWM_X_CMPA_R(MODULE,X)           *((PWM_RegAddType) PWM_REG_ADDRESS(MODULE,0x048 + X*0x040))
+#define PWM_X_CMPA_R(MODULE,X)           *((PWM_RegAddType) PWM_REG_ADDRESS(MODULE,0x058 + X*0x040))
 #define PWM_X_CMPB_R(MODULE,X)           *((PWM_RegAddType) PWM_REG_ADDRESS(MODULE,0x05C + X*0x040))
 #define PWM_X_GENA_R(MODULE,X)           *((PWM_RegAddType) PWM_REG_ADDRESS(MODULE,0x060 + X*0x040))
 #define PWM_X_GENB_R(MODULE,X)           *((PWM_RegAddType) PWM_REG_ADDRESS(MODULE,0x064 + X*0x040))
@@ -108,13 +108,54 @@ static const uint32_t PWM_ModulesBaseAddressesLut[PWM_MODULES] =
 /* A function that initializes selected PWM groups */
 PWM_CheckType PWM_Init ()
 {
-    uint8_t LoopIndex;
+    uint8_t LoopIndex,i,j;
     PWM_CheckType RetVar = PWM_NOK;
     const PWM_ConfigType * CfgPtr;
 
     /* Enable/Disable Clock division */
     RCC_REG |= (CLOCK_DIVISOR_ENABLE << 20);
-    RCC_REG |= (CLOCK_DIVISOR_VALUE << 17);
+    RCC_REG &= (CLOCK_DIVISOR_VALUE );
+   // intiating all reg with intail values
+    for(i=0 ; i<PWM_MODULES ;i++)
+    {
+ PWM_M_CTL_R(i)=0x00000000;
+ PWM_SYNC_R(i) =0x00000000;
+ PWM_ENABLE_R(i)=0x00000000;
+ PWM_INVERT_R(i)=0x00000000;
+ PWM_FAULT_R(i)= 0x00000000;
+ PWM_INTEN_R(i)=0x00000000;
+ PWM_RIS_R(i)=0x00000000;
+ PWM_ISC_R(i)=0x00000000;
+ PWM_STATUS_R(i)=0x00000000;
+ PWM_FAULTVAL_R(i)=0x00000000;
+ PWM_ENUPD_R(i)=0x00000000;
+ PWM_MPP_R(i) =0x00000314;
+     for(j=0 ;j< PWM_GEN ;j++ )
+     {
+ PWM_X_CTL_R(i,j)= 0x00000000 ;
+ PWM_X_INTEN_R(i,j)=  0x00000000;
+ PWM_X_RIS_R(i,j)=   0x00000000;
+ PWM_X_ISC_R(i,j)=      0x00000000;
+ PWM_X_LOAD_R(i,j)=     0x00000000;
+ PWM_X_COUNT_R(i,j)=      0x00000000;
+ PWM_X_CMPA_R(i,j)=     0x00000000;
+ PWM_X_CMPB_R(i,j)=    0x00000000;
+ PWM_X_GENA_R(i,j)=    0x00000000;
+ PWM_X_GENB_R(i,j)=       0x00000000;
+ PWM_X_DBCTL_R(i,j)=      0x00000000;
+ PWM_X_DBRISE_R(i,j)=     0x00000000;
+ PWM_X_DBFALL_R(i,j)=     0x00000000;
+ PWM_X_FLTSRC0_R(i,j)=      0x00000000;
+ PWM_X_FLTSRC1_R(i,j)=     0x00000000;
+ PWM_X_MINFLTPER_R(i,j)=     0x00000000;
+
+
+     }
+
+    }
+
+
+
 
     for ( LoopIndex = 0; LoopIndex < PWM_GROUPS_NUMBER ; LoopIndex ++)
     {
@@ -181,266 +222,84 @@ PWM_CheckType PWM_ClrInterruptFlag(uint8_t PWM_ID)
 /* -------------------------------------------------- LA Square Signal generation function ----------------------------------------------------------------*/
 
 /* A function that generates a square signal based on a Left aligned (DOWN) counter mode, frequency and duty cycle given by the user */
-/* N.B.: LOAD (frequency) is specified for all the pins of a generator (multiple pins on a single generator CANNOT have different frequencies)
- *       Duty cycle can be specific for each pin independently
+/* N.B.: LOAD (frequency) and CMPA and CMPB values are specified for all the pins of a generator (multiple pins on a single generator
+ *       CANNOT have different frequencies)
+ *       Duty cycle can be specific for each pin independently when uing different Compare registers for each pin.
  */
 
 /* Enter PWM group's ID, the Clock frequency in KiloHertz, the duty cycle per % */
 
-PWM_CheckType PWM_GenerateLASquareWave (uint8_t PWM_ID, uint16_t PWM_Freq, uint16_t PWM_DCycle )
+PWM_CheckType PWM_GenerateLASquareWave (uint8_t PWM_ID, uint16_t PWM_Freq, float PWM_DCycle )
 {
     PWM_CheckType RetVar = PWM_NOK;
     const PWM_ConfigType * CfgPtr;
     CfgPtr = & PWM_ConfigParam[PWM_ID];
     uint16_t load;
     uint16_t clkFreq;
+    uint16_t DUTY ;
     if ( PWM_ID < PWM_GROUPS_NUMBER )
     {
-        /* Reset and Choose immediate update settings */
-        PWM_X_CTL_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = 0x00000000;
-        /* Set Counter Mode */
-        PWM_X_CTL_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) |= (0 << 1);
-        /* Set PWM LOAD register value */
-        if ((CLOCK_DIVISOR_ENABLE << 20) == 1)
-        {
-            clkFreq = 16000/divisor;
-        }
-        else
-        {
-            clkFreq = 16000; /* System's clock default frequency */
-        }
+    	if ((CfgPtr->PWM_Module_ID<PWM_MODULES && CfgPtr->PWM_Generator_ID < PWM_GEN))
+    	         {
+    		/* Reset and Choose immediate update settings */
+    		        PWM_X_CTL_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = 0x00000000;
+    		        /* Set Counter Mode */
+    		        PWM_X_CTL_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) |= (0 << 1);
+    		        /* Set PWM LOAD register value */
+    		           if (CLOCK_DIVISOR_ENABLE == 1)
+    		           {
+    		            clkFreq = 16000/divisor;
+    		           }
+    		          else
+    		           {
+    		            clkFreq = 16000; /* System's clock default frequency */
+    		           }
 
-        load = clkFreq/PWM_Freq;
-        PWM_X_LOAD_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = load-1;
+    		        load = clkFreq/PWM_Freq;
+    		        PWM_X_LOAD_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = load-1;
 
-        /* Set duty cycle */
+    		        /* Set duty cycle */
+    		        DUTY= ((100 - PWM_DCycle) )*(load - 1)/100;
+    		        PWM_X_CMPA_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = DUTY; /* Will only use Compare A */
+    		           if ((CfgPtr->PWM_Pin_ID % 2) == 0)
+    		           {
+    		            PWM_X_GENA_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = 0x0000008C;
+    		            /*
+    		             * 1000 1100
+    		             * Bits 1:0 = 00 -> Action for when counter = 0, Do nothing
+    		             * Bits 3:2 = 11 -> Action for when counter = LOAD, Drive PWM HIGH
+    		             * Bits 7:6 = 10 -> Action for when counter = comparator A Down, Drive PWM LOW
+    		             */
+    		           }
+    		          else
+    		          {
+    		            PWM_X_GENB_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = 0x0000008C;
+    		          }
 
-        if ((CfgPtr->PWM_Pin_ID % 2) == 0)
-        {
-            PWM_X_CMPA_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = ((100 - PWM_DCycle)/100 )*(load - 1);
-            PWM_X_GENA_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = 0x0000008C;
-            /*
-             * 1000 1100
-             * Bits 1:0 = 00 -> Action for when counter = 0, Do nothing
-             * Bits 3:2 = 11 -> Action for when counter = LOAD, Drive PWM HIGH
-             * Bits 7:6 = 10 -> Action for when counter = comparator A Down, Drive PWM LOW
-             */
-        }
-        else
-        {
-            PWM_X_CMPB_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = ((100 - PWM_DCycle)/100 )*(load - 1);
-            PWM_X_GENB_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = 0x0000008C;
-        }
+    		        /* Start the timers in PWM generator */
+    		        PWM_X_CTL_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) |= 1 <<0;
 
-        /* Start the timers in PWM generator */
-        PWM_X_CTL_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) |= 1 <<0;
+    		        /* PWM Output Enable */
+    		        PWM_ENABLE_R(CfgPtr->PWM_Module_ID) |= 1 << (CfgPtr->PWM_Pin_ID) ;
 
-        /* PWM Output Enable */
-        PWM_ENABLE_R(CfgPtr->PWM_Module_ID) |= 1 << (CfgPtr->PWM_Pin_ID) ;
+    		        RetVar = PWM_OK;
 
-        RetVar = PWM_OK;
+
+
+    	         }
+    	         else
+    	         {
+    	        	 RetVar = PWM_NOK;
+    	         }
+
     }
     else
-    {
+       {
         RetVar = PWM_NOK;
-    }
+       }
 
 
     return RetVar;
 
 }
 
-/* -------------------------------------------------- DC Motor ----------------------------------------------------------------*/
-
-/* This function is meant to drive a DC Motor based on the frequency, the speed, the polarity given by the user*/
-/* N.B.: The selected frequency depends on the motor's type. DC motors have minimum and maximum frequency values to which they can respond */
-
-/* Enter PWM group's ID, the frequency in KiloHertz, the desired mapped speed and the polarity */
-
-PWM_CheckType PWM_DCMotor (uint8_t PWM_ID, uint16_t PWM_Freq, uint16_t motorSpeed, PWM_Polarity motorPolarity )
-{
-    PWM_CheckType RetVar = PWM_NOK;
-    const PWM_ConfigType * CfgPtr;
-    CfgPtr = & PWM_ConfigParam[PWM_ID];
-    uint16_t absoluteMappingValue;
-    uint8_t PWM_DCycle;
-    uint16_t load;
-    uint16_t clkFreq;
-
-    absoluteMappingValue = CfgPtr->endValue - CfgPtr->startValue;
-    PWM_DCycle = ((motorSpeed - CfgPtr->startValue)/absoluteMappingValue)*100;
-
-    if ( PWM_ID < PWM_GROUPS_NUMBER )
-    {
-        /* Reset and Choose immediate update settings */
-        PWM_X_CTL_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = 0x00000000;
-        /* Set Counter Mode */
-        PWM_X_CTL_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) |= (0 << 1);
-
-        /* Set PWM LOAD register value */
-        if ((CLOCK_DIVISOR_ENABLE << 20) == 1)
-        {
-            clkFreq = 16000/divisor;
-        }
-        else
-        {
-            clkFreq = 16000; /* System's clock default frequency */
-        }
-
-        load = clkFreq/PWM_Freq;
-        PWM_X_LOAD_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = load-1;
-
-        /* Set duty cycle */
-
-        if ((CfgPtr->PWM_Pin_ID % 2) == 0)
-        {
-            PWM_X_CMPA_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = ((100 - PWM_DCycle)/100 )*(load - 1);
-            PWM_X_GENA_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = 0x0000008C;
-            /*
-             * 1000 1100
-             * Bits 1:0 = 00 -> Action for when counter = 0, Do nothing
-             * Bits 3:2 = 11 -> Action for when counter = LOAD, Drive PWM HIGH
-             * Bits 7:6 = 10 -> Action for when counter = comparator A Down, Drive PWM LOW
-             */
-        }
-        else
-        {
-            PWM_X_CMPB_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = ((100 - PWM_DCycle)/100 )*(load - 1);
-            PWM_X_GENB_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = 0x0000008C;
-        }
-
-        /* PWM Polarity */
-        if (motorPolarity == 1)
-        {
-            PWM_INVERT_R(CfgPtr->PWM_Module_ID) |= motorPolarity << (CfgPtr->PWM_Pin_ID);
-        }
-        else
-        {
-            PWM_INVERT_R(CfgPtr->PWM_Module_ID) &= motorPolarity << (CfgPtr->PWM_Pin_ID);
-        }
-
-        /* Start the timers in PWM generator */
-        PWM_X_CTL_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) |= 1 <<0;
-
-        /* PWM Output Enable */
-        PWM_ENABLE_R(CfgPtr->PWM_Module_ID) |= 1 << (CfgPtr->PWM_Pin_ID) ;
-
-        RetVar = PWM_OK;
-    }
-    else
-    {
-        RetVar = PWM_NOK;
-    }
-
-
-    return RetVar;
-
-}
-
-/* -------------------------------------------------- Servo Motor ----------------------------------------------------------------*/
-
-PWM_CheckType PWM_Initiate_Servo (uint8_t PWM_ID )
-{
-    PWM_CheckType RetVar = PWM_NOK;
-    const PWM_ConfigType * CfgPtr;
-    CfgPtr = & PWM_ConfigParam[PWM_ID];
-    uint16_t load;
-    uint32_t clkFreq;
-    if ( PWM_ID < PWM_GROUPS_NUMBER )
-    {
-        /* Reset and Choose immediate update settings */
-        PWM_X_CTL_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = 0x00000000;
-        /* Set Counter Mode */
-        PWM_X_CTL_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) |= (0 << 1);
-        /* Set PWM LOAD register value */
-        if ((CLOCK_DIVISOR_ENABLE << 20) == 1)
-        {
-            clkFreq = 16000000/divisor;
-        }
-        else
-        {
-            clkFreq = 16000000;
-        }
-        load = clkFreq/50;
-        PWM_X_LOAD_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = load-1;
-
-        if ((CfgPtr->PWM_Pin_ID % 2) == 0)
-                {
-                    PWM_X_CMPA_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = ((100 - 5)/100 )*(load - 1);
-                    PWM_X_GENA_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = 0x0000008C;
-
-                }
-                else
-                {
-                    PWM_X_CMPB_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = ((100 - 5)/100 )*(load - 1);
-                    PWM_X_GENB_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = 0x0000008C;
-                }
-
-                /* Start the timers in PWM generator */
-                PWM_X_CTL_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) |= 1 <<0;
-
-                /* PWM Output Enable */
-                PWM_ENABLE_R(CfgPtr->PWM_Module_ID) |= 1 << (CfgPtr->PWM_Pin_ID) ;
-
-                RetVar = PWM_OK;
-
-    }
-
-    else
-        {
-            RetVar = PWM_NOK;
-        }
-    return RetVar;
-}
-
-/* -_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- */
-
-PWM_CheckType PWM_Rotate_Servo (uint8_t PWM_ID, uint8_t degree )
-{
-    PWM_CheckType RetVar = PWM_NOK;
-    const PWM_ConfigType * CfgPtr;
-    CfgPtr = & PWM_ConfigParam[PWM_ID];
-    uint16_t load;
-    uint32_t clkFreq;
-    float duty= 5+ ((5*degree)/180);
-    while(PWM_X_COUNT_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID)!=0);
-    PWM_X_CTL_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = 0x00000000;
-    PWM_ENABLE_R(CfgPtr->PWM_Module_ID) &= (~ (1 << CfgPtr->PWM_Pin_ID)) ;
-
-        if ((CLOCK_DIVISOR_ENABLE << 20) == 1)
-           {
-               clkFreq = 16000000/divisor;
-           }
-           else
-           {
-               clkFreq = 16000000;
-           }
-           load = clkFreq/50;
-           PWM_X_LOAD_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = load-1;
-   if ((CfgPtr->PWM_Pin_ID % 2) == 0)
-            {
-                         PWM_X_CMPA_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = ((100 -duty  )/100 )*(load - 1);
-
-
-             }
-   else
-             {
-                    PWM_X_CMPB_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = ((100 - duty)/100 )*(load - 1);
-                    PWM_X_GENB_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) = 0x0000008C;
-             }
-
-                           /* Start the timers in PWM generator */
-                    PWM_X_CTL_R(CfgPtr->PWM_Module_ID,CfgPtr->PWM_Generator_ID) |= 1 <<0;
-
-                           /* PWM Output Enable */
-                  PWM_ENABLE_R(CfgPtr->PWM_Module_ID) |= 1 << (CfgPtr->PWM_Pin_ID) ;
-
-                           RetVar = PWM_OK;
-
-
-
-return RetVar;
-
-}
-
-/*-----------------------------------------------------------------------------------------------------------------------------------------*/

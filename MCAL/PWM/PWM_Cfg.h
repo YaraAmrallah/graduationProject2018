@@ -14,8 +14,8 @@
 #define PWM_GROUPS_NUMBER 1U
 
 /*A configuration to enable the clock division for the PWM module. */
-#define CLOCK_DIVISOR_ENABLE DISABLE /* ENABLE/DISABLE */
-#define CLOCK_DIVISOR_VALUE  DIVISOR_BY_2 /* DIVISOR_BY_N where N = {2,4,8,16,32,64} */
+#define CLOCK_DIVISOR_ENABLE ENABLE /* ENABLE/DISABLE */
+#define CLOCK_DIVISOR_VALUE  DIVISOR_BY_64 /* DIVISOR_BY_N where N = {2,4,8,16,32,64} */
 
 
 #endif /* PWM_CFG_H_ */
