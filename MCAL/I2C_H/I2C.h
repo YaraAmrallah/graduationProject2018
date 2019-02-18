@@ -79,7 +79,8 @@ typedef volatile uint32_t* const I2C_RegisterAddressType;
  #define I2CMCLKOCNT(PERIPHERAL_ID)        *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_MCLKOCNT_OFFSET))
  #define I2CMBON(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_MBON_OFFSET))
  #define I2CMCR2(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_MCR2_OFFSET))
- /************************************SLAVE****************************/
+
+/************************************SLAVE****************************/
  #define I2CSOAR(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_SOAR_OFFSET))
  #define I2CSCSR(PERIPHERAL_ID)            *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_SCSR_OFFSET))
  #define I2CSDR(PERIPHERAL_ID)             *((I2C_RegisterAddressType) (I2C_BASE+(0x1000*PERIPHERAL_ID)+I2C_SDR_OFFSET))
@@ -149,8 +150,8 @@ typedef enum
 
 typedef enum {
 
-	I2C_START_GEN=7,
-	I2C_STOP_GEN=5
+	I2C_START_GEN=0x00000007,
+	I2C_STOP_GEN=0x00000005
 }I2C_Control;
 typedef enum {
 	I2C_RUN_EN=0,

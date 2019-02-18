@@ -1,11 +1,6 @@
 #include "I2C_Manager.h"
 //Flags
-static uint8_t I2C_Write;
-static uint8_t I2C_Read;
-//variables
-static uint8_t I2C_SlaveAddress;
-static uint8_t I2C_ByteCount;
-static uint8_t* I2C_DataPointer;
+
 
 //Function write that will be used in the Main
 void I2C_RequestWrite(uint8_t SlaveAddress, uint8_t* DataPointer, uint8_t NumOfBytes)
@@ -84,6 +79,7 @@ void I2C_Manager(void)
             }
             else
             {
+
                 ManagerState = I2C_START_STATUS;
             }
         }

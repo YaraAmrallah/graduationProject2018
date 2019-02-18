@@ -84,7 +84,7 @@ I2C_CheckType I2C_Init(void)
  void I2C_SendSlaveAddress (uint8_t SlaveAddress,uint8_t WriteOrRead, uint8_t Peripheral_ID)
 	{
         const I2C_ConfigType* ConfigPtr = &I2C_ConfigParam[Peripheral_ID];
-        I2CMSA(ConfigPtr->I2C_Peripheral_ID) = (SlaveAddress|WriteOrRead);
+        I2CMSA(ConfigPtr->I2C_Peripheral_ID) = ((SlaveAddress<<1)|WriteOrRead);
 	}
 
 	void I2C_Clear_ADDR(uint8_t Peripheral_ID)
@@ -118,7 +118,6 @@ void I2C_SendData(uint8_t* DataPTR,uint8_t Peripheral_ID)
 	
 	const I2C_ConfigType* ConfigPtr = &I2C_ConfigParam[Peripheral_ID];
 	I2CMDR(ConfigPtr->I2C_Peripheral_ID)=(*DataPTR);
-
 
 	 }
 

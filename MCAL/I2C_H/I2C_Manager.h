@@ -1,7 +1,12 @@
 #ifndef I2C_MANAGER_H
 #define I2C_MANAGER_H
 #include "I2C.h"
-
+static uint8_t I2C_Write;
+static uint8_t I2C_Read;
+//variables
+static uint8_t I2C_SlaveAddress;
+static uint8_t I2C_ByteCount;
+static uint8_t* I2C_DataPointer;
 typedef enum
 {
    I2C_WRITE = 0,
