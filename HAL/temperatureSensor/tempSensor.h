@@ -16,6 +16,8 @@
 
 typedef enum {tSensor_OK = 0, tSensor_NOK = 1} tSensor_CheckType;
 
+#define ADC_SAMPLING_VALUE 4095
+
 typedef struct
 {
     /* Sensor ID among the ADC groups */
@@ -32,7 +34,7 @@ typedef struct
 extern const tempSensor_ConfigType tSensorConfigParam [TSENSOR_GROUPS_NUMBER];
 
 tSensor_CheckType tempSensorInitialization ();
-tSensor_CheckType startADC_conversion(uint8_t tSensorIndex);
+tSensor_CheckType tempSensorStartADC_conversion(uint8_t tSensorIndex);
 tSensor_CheckType mainTempSensorRequest (uint8_t tSensorIndex);
 float returnTempSensorReading (uint8_t tSensorIndex);
 
