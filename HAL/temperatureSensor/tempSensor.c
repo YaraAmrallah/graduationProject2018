@@ -18,7 +18,7 @@
 float dataArray[TSENSOR_GROUPS_NUMBER][NUMBER_OF_SAMPLES];
 uint8_t countArray[TSENSOR_GROUPS_NUMBER] = {0};
 uint16_t ADC_array[TSENSOR_GROUPS_NUMBER] = {0};
-uint8_t flag = 0;
+uint8_t flag[TSENSOR_GROUPS_NUMBER] = {0};
 
 /*-------------------------------------------------------- Functions -------------------------------------------------------------------*/
 
@@ -59,7 +59,7 @@ tSensor_CheckType tempSensorInitialization ()
 
 /*------------------------------ A function that starts the ADC conversion ------------------------------------*/
 
-tSensor_CheckType startADC_conversion(uint8_t tSensorIndex)
+tSensor_CheckType tempSensorStartADC_conversion(uint8_t tSensorIndex)
 {
     Adc_ReturnType checkConversion = ADC_NOK;
     tSensor_CheckType retVar = tSensor_NOK;
@@ -86,7 +86,7 @@ tSensor_CheckType mainTempSensorRequest (uint8_t tSensorIndex)
     Adc_StatusType checkStatus;
     Adc_ReturnType checkRead = ADC_NOK;
     Adc_ValueGroupType receivedData;
-    float mappingValue = (float)VDDA/4095;
+    float mappingValue = (float)VDDA/(float)ADC_SAMPLING_VALUE;
 
     if (tSensorIndex < (TSENSOR_GROUPS_NUMBER))
     {
@@ -103,6 +103,7 @@ tSensor_CheckType mainTempSensorRequest (uint8_t tSensorIndex)
 
                     if(countArray[tSensorIndex] == (NUMBER_OF_SAMPLES-1))
                     {
+                        /* reset the counter */
                         countArray[tSensorIndex] = 0;
                     }
                     else
@@ -110,9 +111,9 @@ tSensor_CheckType mainTempSensorRequest (uint8_t tSensorIndex)
                         countArray[tSensorIndex] = countArray[tSensorIndex] + 1;
                     }
 
-                    if(flag < NUMBER_OF_SAMPLES)
+                    if (flag[tSensorIndex] < NUMBER_OF_SAMPLES)
                     {
-                        flag++;
+                        flag[tSensorIndex] = flag[tSensorIndex] + 1;
                     }
                     else
                     {
@@ -147,11 +148,8 @@ float returnTempSensorReading (uint8_t tSensorIndex)
     float averagingValue = (float) NUMBER_OF_SAMPLES;
 
 
-    if(flag == (NUMBER_OF_SAMPLES))
+    if(flag[tSensorIndex] == (NUMBER_OF_SAMPLES))
     {
-        /* reset the counter */
-        countArray[tSensorIndex] = 0;
-
             for(loopIndex = 0; loopIndex < NUMBER_OF_SAMPLES; loopIndex++)
             {
                 tSensorReading = tSensorReading + dataArray[tSensorIndex][loopIndex];
