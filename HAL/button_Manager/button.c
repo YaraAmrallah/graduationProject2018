@@ -37,21 +37,15 @@
 #include "GPIO.h"
 #include "GPIO_Cfg.h"
 
-/*-------------------------------------------- Things that should be added to GPIO.h ---------------------------------------------------*/
 
-/*
- * #define GPIOPUR_REG(PORT_ID)            *((GPIO_RegAddType)GPIO_REG_ADDRESS(PORT_ID,0x510))
- * #define GPIOPDR_REG(PORT_ID)            *((GPIO_RegAddType)GPIO_REG_ADDRESS(PORT_ID,0x514))
- */
-
-/*-------------------------------------------------------- Structures ------------------------------------------------------------------*/
-/* Structure that must be defined as global to the button functions in the code */
+/*-------------------------------------------------------- Global Variables ------------------------------------------------------------------*/
 
 Adc_ValueGroupType dataArray[BUTTON_GROUPS_NUMBER][MINIMUM_NUMBER_OF_SAMPLES];
 uint8_t countArray[BUTTON_GROUPS_NUMBER] = {0};
 uint8_t secondCountArray[BUTTON_GROUPS_NUMBER] = {0};
 uint16_t ADC_array[BUTTON_GROUPS_NUMBER] = {0};
 buttonState lastStatusArray[BUTTON_GROUPS_NUMBER] = {buttonNotPressed};
+uint8_t flag[BUTTON_GROUPS_NUMBER] = {0};
 
 /*-------------------------------------------------------- Functions -------------------------------------------------------------------*/
 
@@ -62,21 +56,15 @@ button_CheckType buttonInitialization ()
     uint8_t loopIndex;
     button_CheckType retVar = button_NOK;
     Adc_ReturnType checkBuffer = ADC_NOK;
-    Adc_ReturnType checkConversion = ADC_NOK;
 
     for (loopIndex = 0; loopIndex < BUTTON_GROUPS_NUMBER ; loopIndex ++)
     {
-        //Pull up and pull down resistors ?
         if(buttonConfigParam[loopIndex].buttonActive == activeHigh)
         {
-            //GPIOPUR_REG(CfgPtr->button_ID) |= (buttonConfigParam[loopIndex].buttonMask & 0x00);
-            //GPIOPDR_REG(CfgPtr->button_ID) |= (buttonConfigParam[loopIndex].buttonMask & 0xFF);
             retVar = button_OK;
         }
         else if (buttonConfigParam[loopIndex].buttonActive == activeLow)
         {
-            //GPIOPUR_REG(CfgPtr->button_ID) |= (buttonConfigParam[loopIndex].buttonMask & 0xFF);
-            //GPIOPDR_REG(CfgPtr->button_ID) |= (buttonConfigParam[loopIndex].buttonMask & 0x00);
             retVar = button_OK;
         }
         else
@@ -98,8 +86,8 @@ button_CheckType buttonInitialization ()
         }
 
         checkBuffer = Adc_SetupResultBuffer(buttonConfigParam[loopIndex].button_ID, &ADC_array[loopIndex]);
-        checkConversion = Adc_StartGroupConversion(buttonConfigParam[loopIndex].button_ID);
-        if((checkBuffer == ADC_OK) && (checkConversion == ADC_OK) && (retVar == button_OK ))
+
+        if((checkBuffer == ADC_OK) && (retVar == button_OK ))
         {
             /* do nothing */
         }
@@ -112,26 +100,41 @@ button_CheckType buttonInitialization ()
     return retVar;
 }
 
+/*------------------------------ A function that starts the ADC conversion ------------------------------------*/
+
+button_CheckType buttonStartADC_conversion(uint8_t buttonIndex)
+{
+    Adc_ReturnType checkConversion = ADC_NOK;
+    button_CheckType retVar = button_NOK;
+
+    checkConversion = Adc_StartGroupConversion(buttonIndex);
+
+    if(checkConversion == ADC_OK)
+    {
+        retVar = button_OK;
+    }
+    else
+    {
+        /* do nothing */
+    }
+
+    return retVar;
+}
+
 /*------------------------------ A function that requests data from the ADC manager ----------------------------*/
 
-button_CheckType buttonRequest (uint8_t buttonIndex)
+button_CheckType mainButtonRequest (uint8_t buttonIndex)
 {
     button_CheckType retVar = button_NOK;
-    //const AdcGroup* ADC_confPtr;
     Adc_StatusType checkStatus;
     Adc_ReturnType checkRead = ADC_NOK;
     uint16_t VDDA_value = VDDA_ADC_VALUE;
 
     if (buttonIndex < BUTTON_GROUPS_NUMBER)
     {
-        //ADC_confPtr = &Adc_GroupParameters[buttonConfigParam[buttonIndex].button_ID];
-
-
         if((buttonConfigParam[buttonIndex].buttonHighStateType == justPressed) || (buttonConfigParam[buttonIndex].buttonHighStateType == longPress))
         {
-            //checkBuffer = ADC_GetData(buttonConfigParam[buttonIndex].button_ID, *(ADC_confPtr->AdcGroupDefinition),&dataArray[buttonIndex][countArray[buttonIndex]]);
             checkStatus = Adc_GetGroupStatus(buttonConfigParam[buttonIndex].button_ID);
-
 
             if(checkStatus == ADC_STREAM_COMPLETED)
             {
@@ -141,8 +144,27 @@ button_CheckType buttonRequest (uint8_t buttonIndex)
                 {
                     retVar = button_OK;
                     /* N.B.: Precision is multiplied by 100 */
-                    dataArray[buttonIndex][countArray[buttonIndex]] = (dataArray[buttonIndex][countArray[buttonIndex]])*(VDDA_value)/4095;
+                    dataArray[buttonIndex][countArray[buttonIndex]] = (dataArray[buttonIndex][countArray[buttonIndex]])*(VDDA_value)/ADC_SAMPLING_VALUE;
                     countArray[buttonIndex] = countArray[buttonIndex] + 1;
+
+                    if(countArray[buttonIndex] == (MINIMUM_NUMBER_OF_SAMPLES-1))
+                    {
+                        /* reset the counter */
+                        countArray[buttonIndex] = 0;
+                    }
+                    else
+                    {
+                        countArray[buttonIndex] = countArray[buttonIndex] + 1;
+                    }
+
+                    if (flag[buttonIndex] < MINIMUM_NUMBER_OF_SAMPLES)
+                    {
+                        flag[buttonIndex] = flag[buttonIndex] + 1;
+                    }
+                    else
+                    {
+                        /* do nothing */
+                    }
                 }
                 else
                 {
@@ -153,14 +175,12 @@ button_CheckType buttonRequest (uint8_t buttonIndex)
             {
                 /* do nothing */
             }
-
         }
         else
         {
             /* do nothing */
         }
     }
-
     else
     {
         /* do nothing */
@@ -181,11 +201,8 @@ buttonState returnButtonState (uint8_t buttonIndex)
     uint8_t SC_flag = 0;
     uint16_t VDDA_value = VDDA_ADC_VALUE;
 
-    if(countArray[buttonIndex] == (MINIMUM_NUMBER_OF_SAMPLES))
+    if(flag[buttonIndex] == (MINIMUM_NUMBER_OF_SAMPLES))
     {
-        /* reset the counter */
-        countArray[buttonIndex] = 0;
-
         if(buttonConfigParam[buttonIndex].buttonActive == activeHigh)
         {
             for(loopIndex = 0; loopIndex < MINIMUM_NUMBER_OF_SAMPLES; loopIndex++)
@@ -194,10 +211,6 @@ buttonState returnButtonState (uint8_t buttonIndex)
                 {
                     highFlag++;
                 }
-                /*else if ((dataArray[buttonIndex][loopIndex] <= VDDA_value) && (dataArray[buttonIndex][loopIndex] > (0.9*VDDA_value)))
-                {
-                    SC_flag++ ;
-                }*/
                 else if (dataArray[buttonIndex][loopIndex] < (0.4*VDDA_value))
                 {
                     lowFlag++;
@@ -231,12 +244,13 @@ buttonState returnButtonState (uint8_t buttonIndex)
                 }
             }
         }
+
+        /* decision */
         switch (pressType)
         {
 
         case justPressed:
 
-            /* decision */
             if (highFlag == (MINIMUM_NUMBER_OF_SAMPLES) && (secondCountArray[buttonIndex] != (STUCK_SHORT - 1)))
             {
                 lastStatusArray[buttonIndex] = buttonPressed;
@@ -270,7 +284,9 @@ buttonState returnButtonState (uint8_t buttonIndex)
 
 
             break;
+
         case longPress:
+
             if (highFlag == (MINIMUM_NUMBER_OF_SAMPLES) && (secondCountArray[buttonIndex] == 0) && (secondCountArray[buttonIndex] < (STUCK_LONG-1)))
             {
                 lastStatusArray[buttonIndex] = buttonNotPressed;
@@ -318,8 +334,3 @@ buttonState returnButtonState (uint8_t buttonIndex)
 
     return returnButtonState;
 }
-
-
-
-
-
