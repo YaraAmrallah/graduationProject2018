@@ -18,6 +18,7 @@
 float dataArray[TSENSOR_GROUPS_NUMBER][NUMBER_OF_SAMPLES];
 uint8_t countArray[TSENSOR_GROUPS_NUMBER] = {0};
 uint16_t ADC_array[TSENSOR_GROUPS_NUMBER] = {0};
+uint8_t flag = 0;
 
 /*-------------------------------------------------------- Functions -------------------------------------------------------------------*/
 
@@ -28,7 +29,6 @@ tSensor_CheckType tempSensorInitialization ()
     uint8_t loopIndex;
     tSensor_CheckType retVar = tSensor_NOK;
     Adc_ReturnType checkBuffer = ADC_NOK;
-    Adc_ReturnType checkConversion = ADC_NOK;
 
     for (loopIndex = 0; loopIndex < TSENSOR_GROUPS_NUMBER ; loopIndex ++)
     {
@@ -43,9 +43,8 @@ tSensor_CheckType tempSensorInitialization ()
         }
 
         checkBuffer = Adc_SetupResultBuffer(tSensorConfigParam[loopIndex].tSensor_ID, &ADC_array[loopIndex]);
-        checkConversion = Adc_StartGroupConversion(tSensorConfigParam[loopIndex].tSensor_ID);
 
-        if((checkBuffer == ADC_OK) && (checkConversion == ADC_OK) && (retVar == tSensor_OK ))
+        if((checkBuffer == ADC_OK) && (retVar == tSensor_OK ))
         {
             /* do nothing */
         }
@@ -58,9 +57,30 @@ tSensor_CheckType tempSensorInitialization ()
     return retVar;
 }
 
+/*------------------------------ A function that starts the ADC conversion ------------------------------------*/
+
+tSensor_CheckType startADC_conversion(uint8_t tSensorIndex)
+{
+    Adc_ReturnType checkConversion = ADC_NOK;
+    tSensor_CheckType retVar = tSensor_NOK;
+
+    checkConversion = Adc_StartGroupConversion(tSensorIndex);
+
+    if(checkConversion == ADC_OK)
+    {
+        retVar = tSensor_OK;
+    }
+    else
+    {
+        /* do nothing */
+    }
+
+    return retVar;
+}
+
 /*------------------------------ A function that requests data from the ADC manager ----------------------------*/
 
-tSensor_CheckType tempSensorRequest (uint8_t tSensorIndex)
+tSensor_CheckType mainTempSensorRequest (uint8_t tSensorIndex)
 {
     tSensor_CheckType retVar = tSensor_NOK;
     Adc_StatusType checkStatus;
@@ -79,9 +99,25 @@ tSensor_CheckType tempSensorRequest (uint8_t tSensorIndex)
                 if(checkRead == ADC_OK)
                 {
                     retVar = tSensor_OK;
-                    /* N.B.: Precision is multiplied by 100 */
                     dataArray[tSensorIndex][countArray[tSensorIndex]] = (float)(receivedData)*(mappingValue)/(tSensorConfigParam[tSensorIndex].sensorSensitivity*0.001);
-                    countArray[tSensorIndex] = countArray[tSensorIndex] + 1;
+
+                    if(countArray[tSensorIndex] == (NUMBER_OF_SAMPLES-1))
+                    {
+                        countArray[tSensorIndex] = 0;
+                    }
+                    else
+                    {
+                        countArray[tSensorIndex] = countArray[tSensorIndex] + 1;
+                    }
+
+                    if(flag < NUMBER_OF_SAMPLES)
+                    {
+                        flag++;
+                    }
+                    else
+                    {
+                        /* do nothing */
+                    }
                 }
                 else
                 {
@@ -110,7 +146,8 @@ float returnTempSensorReading (uint8_t tSensorIndex)
     float tSensorReading = 0.0;
     float averagingValue = (float) NUMBER_OF_SAMPLES;
 
-    if(countArray[tSensorIndex] == (NUMBER_OF_SAMPLES))
+
+    if(flag == (NUMBER_OF_SAMPLES))
     {
         /* reset the counter */
         countArray[tSensorIndex] = 0;
@@ -119,7 +156,6 @@ float returnTempSensorReading (uint8_t tSensorIndex)
             {
                 tSensorReading = tSensorReading + dataArray[tSensorIndex][loopIndex];
             }
-
             tSensorReading = tSensorReading/averagingValue;
     }
     else
@@ -129,6 +165,3 @@ float returnTempSensorReading (uint8_t tSensorIndex)
 
     return tSensorReading;
 }
-
-
-
