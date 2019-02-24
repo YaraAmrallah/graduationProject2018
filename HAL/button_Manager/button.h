@@ -20,6 +20,8 @@ typedef enum {justPressed = 0, longPress = 1}buttonPressType;
 typedef enum {button_OK = 0, button_NOK = 1} button_CheckType;
 typedef enum {activeHigh = 0, activeLow = 1} activeType;
 
+#define ADC_SAMPLING_VALUE 4095
+
 typedef struct
 {
     /* Button ID */
@@ -45,7 +47,8 @@ extern const button_ConfigType buttonConfigParam [BUTTON_GROUPS_NUMBER];
 /*---------------------------------------------- Functions ------------------------------------------------------*/
 
 button_CheckType buttonInitialization ();
-button_CheckType buttonRequest (uint8_t buttonIndex);
+button_CheckType buttonStartADC_conversion(uint8_t buttonIndex);
+button_CheckType mainButtonRequest (uint8_t buttonIndex);
 buttonState returnButtonState (uint8_t buttonIndex);
 
 
