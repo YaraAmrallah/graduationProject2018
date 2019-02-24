@@ -32,7 +32,8 @@ typedef struct
 extern const tempSensor_ConfigType tSensorConfigParam [TSENSOR_GROUPS_NUMBER];
 
 tSensor_CheckType tempSensorInitialization ();
-tSensor_CheckType tempSensorRequest (uint8_t tSensorIndex);
+tSensor_CheckType startADC_conversion(uint8_t tSensorIndex);
+tSensor_CheckType mainTempSensorRequest (uint8_t tSensorIndex);
 float returnTempSensorReading (uint8_t tSensorIndex);
 
 
