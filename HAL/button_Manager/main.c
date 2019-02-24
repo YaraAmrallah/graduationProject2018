@@ -11,12 +11,13 @@ int main(void)
     GPIO_Init();
     ADC_Init();
     buttonInitialization ();
+    buttonStartADC_conversion(0);
     buttonState returnedState;
     uint16_t i = 0;
 
     while(1)
     {
-        buttonRequest(0);
+        mainButtonRequest(0);
         returnedState = returnButtonState(0);
 
         if (returnedState == buttonPressed)
