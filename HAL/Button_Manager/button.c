@@ -2,44 +2,335 @@
  * button.c
  *
  *  Created on: Jan 27, 2019
- *      Author: Gebro
+ *      Author: yaraa
  */
+
+/* -------------------------------------------------- Manager's Description ----------------------------------------------------------------*/
+
+/*
+ * The button manager's purpose is to differentiate between the possible button's states:
+ * - buttonNotPressed: the button is active low, connected to the ground.
+ * - justPressed: the button is pressed for a short amount of time, the user has to take action based on a single click.
+ * - longPress: the user has to press continuously to take a continuous/non-continuous action.
+ * - buttonStuck: the button may be stuck by the user or by any mechanical damage.
+ * - shortCircuit: the resistance of the
+ * - When the counter value reaches zero, reloaded, matches the value of the compare registers, the option of the output pin change.
+ *
+ *
+ * */
+
+
+/*--------------------------------------------------- ADC MAnager functions -------------------------------------------------------------*/
+/*
+ * ADCManager_FunctionReturn ADCManager_Init();
+ * ADCManager_FunctionReturn ADCManager_StartConversion();
+ * ADCManager_FunctionReturn ADC_GetData(uint8_t ADC_GroupIdx,uint8_t ADC_DefinitionIdx,uint16_t* ADCData_Buffer);
+ *
+ */
+
+/* -------------------------------------------------- Headers to include ----------------------------------------------------------------*/
+
+#include "ADC.h"
 #include "button.h"
-#define MAX_DIGITAL_VALUE 4095
-#define MAX_BUTTONS_NUMBER 8
+#include "button_cfg.h"
+#include "M4MemMap.h"
+#include "GPIO.h"
+#include "GPIO_Cfg.h"
 
 
-extern ButtonGroup Button_GroupParameters[NUMBER_OF_BUTTONS_GROUPS];
+/*-------------------------------------------------------- Global Variables ------------------------------------------------------------------*/
 
-Button_FunctionValidation Read_Button(uint8_t ButtonGroupIdx, Button_StateType* Button_PTRState)
+Adc_ValueGroupType dataArray[BUTTON_GROUPS_NUMBER][MINIMUM_NUMBER_OF_SAMPLES];
+uint8_t countArray[BUTTON_GROUPS_NUMBER] = {0};
+uint8_t secondCountArray[BUTTON_GROUPS_NUMBER] = {0};
+uint16_t ADC_array[BUTTON_GROUPS_NUMBER] = {0};
+buttonState lastStatusArray[BUTTON_GROUPS_NUMBER] = {buttonNotPressed};
+uint8_t flag[BUTTON_GROUPS_NUMBER] = {0};
+
+/*-------------------------------------------------------- Functions -------------------------------------------------------------------*/
+
+/*--------------------------- Function that initializes each button group and performs user's inputs checks ----------------------------*/
+
+button_CheckType buttonInitialization ()
 {
-  Adc_StatusType Adc_Statues;
-	Adc_FunctionValidation AdcFunc_Validate=ADC_OK;
-	Button_FunctionValidation ButtonFunc_Validate = Button_OK;
-	
-	ButtonGroup* GrpPtr= &Button_GroupParameters[ButtonGroupIdx];
-	
-	uint16_t Adc_ReadingsBuffer[MAX_BUTTONS_NUMBER]={0};
-	uint8_t i = 0;
-    if(ButtonGroupIdx >= NUMBER_OF_GROUPS)
-        return Button_E_PARAM_GROUP;
-    else
+    uint8_t loopIndex;
+    button_CheckType retVar = button_NOK;
+    Adc_ReturnType checkBuffer = ADC_NOK;
+
+    for (loopIndex = 0; loopIndex < BUTTON_GROUPS_NUMBER ; loopIndex ++)
     {
-			AdcFunc_Validate = Adc_ReadGroup(GrpPtr->AdcGroupIdx,Adc_ReadingsBuffer);
-			if(AdcFunc_Validate != ADC_OK)
-			{
-				ButtonFunc_Validate = Button_E_ADC;
-			}
-			else 
-			{
-				for(i = 0;i < GrpPtr->Buttons_Number;i++)
-				{
-					Adc_ReadingsBuffer[i] = (Adc_ReadingsBuffer[i]*MAX_VOLT)/MAX_DIGITAL_VALUE;
-				}
-				AdcFunc_Validate = Adc_StartGroupConversion(GrpPtr->AdcGroupIdx);
-			}
+        if(buttonConfigParam[loopIndex].buttonActive == activeHigh)
+        {
+            retVar = button_OK;
+        }
+        else if (buttonConfigParam[loopIndex].buttonActive == activeLow)
+        {
+            retVar = button_OK;
+        }
+        else
+        {
+            retVar = button_NOK;
+        }
+
+        if((buttonConfigParam[loopIndex].buttonHighStateType == justPressed ) && (retVar == button_OK))
+        {
+            /* do nothing */
+        }
+        else if ((buttonConfigParam[loopIndex].buttonHighStateType == longPress) && (retVar == button_OK))
+        {
+            /* do nothing */
+        }
+        else
+        {
+            retVar = button_NOK;
+        }
+
+        checkBuffer = Adc_SetupResultBuffer(buttonConfigParam[loopIndex].button_ID, &ADC_array[loopIndex]);
+
+        if((checkBuffer == ADC_OK) && (retVar == button_OK ))
+        {
+            /* do nothing */
+        }
+        else
+        {
+            retVar = button_NOK;
+        }
     }
-	return ButtonFunc_Validate;
+
+    return retVar;
 }
 
+/*------------------------------ A function that starts the ADC conversion ------------------------------------*/
 
+button_CheckType buttonStartADC_conversion(uint8_t buttonIndex)
+{
+    Adc_ReturnType checkConversion = ADC_NOK;
+    button_CheckType retVar = button_NOK;
+
+    checkConversion = Adc_StartGroupConversion(buttonIndex);
+
+    if(checkConversion == ADC_OK)
+    {
+        retVar = button_OK;
+    }
+    else
+    {
+        /* do nothing */
+    }
+
+    return retVar;
+}
+
+/*------------------------------ A function that requests data from the ADC manager ----------------------------*/
+
+button_CheckType mainButtonRequest (uint8_t buttonIndex)
+{
+    button_CheckType retVar = button_NOK;
+    Adc_StatusType checkStatus;
+    Adc_ReturnType checkRead = ADC_NOK;
+    uint16_t VDDA_value = VDDA_ADC_VALUE;
+
+    if (buttonIndex < BUTTON_GROUPS_NUMBER)
+    {
+        if((buttonConfigParam[buttonIndex].buttonHighStateType == justPressed) || (buttonConfigParam[buttonIndex].buttonHighStateType == longPress))
+        {
+            checkStatus = Adc_GetGroupStatus(buttonConfigParam[buttonIndex].button_ID);
+
+            if(checkStatus == ADC_STREAM_COMPLETED)
+            {
+                checkRead = Adc_ReadGroup(buttonConfigParam[buttonIndex].button_ID, &dataArray[buttonIndex][countArray[buttonIndex]]);
+
+                if(checkRead == ADC_OK)
+                {
+                    retVar = button_OK;
+                    /* N.B.: Precision is multiplied by 100 */
+                    dataArray[buttonIndex][countArray[buttonIndex]] = (dataArray[buttonIndex][countArray[buttonIndex]])*(VDDA_value)/ADC_SAMPLING_VALUE;
+                    countArray[buttonIndex] = countArray[buttonIndex] + 1;
+
+                    if(countArray[buttonIndex] == (MINIMUM_NUMBER_OF_SAMPLES-1))
+                    {
+                        /* reset the counter */
+                        countArray[buttonIndex] = 0;
+                    }
+                    else
+                    {
+                        countArray[buttonIndex] = countArray[buttonIndex] + 1;
+                    }
+
+                    if (flag[buttonIndex] < MINIMUM_NUMBER_OF_SAMPLES)
+                    {
+                        flag[buttonIndex] = flag[buttonIndex] + 1;
+                    }
+                    else
+                    {
+                        /* do nothing */
+                    }
+                }
+                else
+                {
+                    /* do nothing */
+                }
+            }
+            else
+            {
+                /* do nothing */
+            }
+        }
+        else
+        {
+            /* do nothing */
+        }
+    }
+    else
+    {
+        /* do nothing */
+    }
+
+    return retVar;
+}
+
+/*---------------------------------- Function that returns the button State --------------------------------------------------*/
+
+buttonState returnButtonState (uint8_t buttonIndex)
+{
+    buttonPressType pressType = buttonConfigParam[buttonIndex].buttonHighStateType;
+    buttonState returnButtonState = lastStatusArray[buttonIndex];
+    uint8_t loopIndex;
+    uint8_t highFlag = 0;
+    uint8_t lowFlag = 0;
+    uint8_t SC_flag = 0;
+    uint16_t VDDA_value = VDDA_ADC_VALUE;
+
+    if(flag[buttonIndex] == (MINIMUM_NUMBER_OF_SAMPLES))
+    {
+        if(buttonConfigParam[buttonIndex].buttonActive == activeHigh)
+        {
+            for(loopIndex = 0; loopIndex < MINIMUM_NUMBER_OF_SAMPLES; loopIndex++)
+            {
+                if ((dataArray[buttonIndex][loopIndex] <= (VDDA_value)) && (dataArray[buttonIndex][loopIndex] > (0.6*VDDA_value)))
+                {
+                    highFlag++;
+                }
+                else if (dataArray[buttonIndex][loopIndex] < (0.4*VDDA_value))
+                {
+                    lowFlag++;
+                }
+                else
+                {
+                    /* do nothing */
+                }
+            }
+        }
+        else
+        {
+
+            for(loopIndex = 0; loopIndex < MINIMUM_NUMBER_OF_SAMPLES; loopIndex++)
+            {
+                if ((dataArray[buttonIndex][loopIndex] < (0.109*VDDA_value)) && (dataArray[buttonIndex][loopIndex] > 0))
+                {
+                    highFlag++;
+                }
+                else if (dataArray[buttonIndex][loopIndex] == 0)
+                {
+                    SC_flag++ ;
+                }
+                else if ((dataArray[buttonIndex][loopIndex] <= VDDA_value) && (dataArray[buttonIndex][loopIndex] > (0.6*VDDA_value)))
+                {
+                    lowFlag++;
+                }
+                else
+                {
+                    /* do nothing */
+                }
+            }
+        }
+
+        /* decision */
+        switch (pressType)
+        {
+
+        case justPressed:
+
+            if (highFlag == (MINIMUM_NUMBER_OF_SAMPLES) && (secondCountArray[buttonIndex] != (STUCK_SHORT - 1)))
+            {
+                lastStatusArray[buttonIndex] = buttonPressed;
+                returnButtonState = buttonPressed;
+                secondCountArray[buttonIndex]++;
+            }
+            else if ((lowFlag <= (MINIMUM_NUMBER_OF_SAMPLES)) && (lowFlag > NOT_PRESSED_PERCENTAGE(MINIMUM_NUMBER_OF_SAMPLES)) && (lastStatusArray[buttonIndex] == buttonPressed))
+            {
+                lastStatusArray[buttonIndex] = buttonNotPressed;
+                returnButtonState = buttonReleased;
+                secondCountArray[buttonIndex] = 0;
+            }
+            else if (SC_flag == (MINIMUM_NUMBER_OF_SAMPLES))
+            {
+                lastStatusArray[buttonIndex] = buttonNotPressed;
+                returnButtonState = shortCircuit;
+                secondCountArray[buttonIndex] = 0;
+            }
+            else if ((highFlag == (MINIMUM_NUMBER_OF_SAMPLES)) && (secondCountArray[buttonIndex] == (STUCK_SHORT - 1)))
+            {
+                lastStatusArray[buttonIndex] = buttonNotPressed;
+                returnButtonState = buttonStuck;
+                secondCountArray[buttonIndex] = 0;
+            }
+            else
+            {
+                lastStatusArray[buttonIndex] = buttonNotPressed;
+                returnButtonState = buttonNotPressed;
+                secondCountArray[buttonIndex] = 0;
+            }
+
+
+            break;
+
+        case longPress:
+
+            if (highFlag == (MINIMUM_NUMBER_OF_SAMPLES) && (secondCountArray[buttonIndex] == 0) && (secondCountArray[buttonIndex] < (STUCK_LONG-1)))
+            {
+                lastStatusArray[buttonIndex] = buttonNotPressed;
+                returnButtonState = buttonNotPressed;
+                secondCountArray[buttonIndex]++;
+            }
+            else if ((highFlag == (MINIMUM_NUMBER_OF_SAMPLES)) && (secondCountArray[buttonIndex] >=1 ) && (secondCountArray[buttonIndex] < ((2*STUCK_LONG) - 1)))
+            {
+                lastStatusArray[buttonIndex] = buttonPressed;
+                returnButtonState = buttonPressed;
+                secondCountArray[buttonIndex]++;
+            }
+            else if ((lowFlag <= (MINIMUM_NUMBER_OF_SAMPLES)) && (lowFlag > NOT_PRESSED_PERCENTAGE(MINIMUM_NUMBER_OF_SAMPLES)) && (lastStatusArray[buttonIndex] == buttonPressed))
+            {
+                lastStatusArray[buttonIndex] = buttonNotPressed;
+                returnButtonState = buttonReleased;
+                secondCountArray[buttonIndex] = 0;
+            }
+            else if (SC_flag == (MINIMUM_NUMBER_OF_SAMPLES))
+            {
+                lastStatusArray[buttonIndex] = buttonNotPressed;
+                returnButtonState = shortCircuit;
+                secondCountArray[buttonIndex] = 0;
+            }
+            else if ((highFlag == (MINIMUM_NUMBER_OF_SAMPLES)) && (secondCountArray[buttonIndex] == ((2*STUCK_LONG) - 1)))
+            {
+                lastStatusArray[buttonIndex] = buttonNotPressed;
+                returnButtonState = buttonStuck;
+                secondCountArray[buttonIndex] = 0;
+            }
+            else
+            {
+                lastStatusArray[buttonIndex] = buttonNotPressed;
+                returnButtonState = buttonNotPressed;
+                secondCountArray[buttonIndex] = 0;
+            }
+
+            break;
+        }
+    }
+    else
+    {
+        /* do nothing */
+    }
+
+    return returnButtonState;
+}

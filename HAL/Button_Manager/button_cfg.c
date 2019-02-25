@@ -2,14 +2,13 @@
  * button_cfg.c
  *
  *  Created on: Jan 27, 2019
- *      Author: Gebro
+ *      Author: yaraa
  */
 
 
 #include "button_cfg.h"
+#include "button.h"
 
+const button_ConfigType buttonConfigParam [BUTTON_GROUPS_NUMBER] =
+{{0,0,activeHigh,longPress}};
 
-ButtonGroup Button_GroupParameters[NUMBER_OF_BUTTONS_GROUPS]=
-{
-{0, 1, Button_NotPressed} 
-};
