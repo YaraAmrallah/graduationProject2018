@@ -19,8 +19,6 @@ typedef uint8 Adc_SequencerType;
 /* (Numeric Id of Adc_Module) */
 typedef uint8 Adc_ModuleType;
 
-typedef uint8 Adc_NumberOfInputChannelsType;
-
 /* Type for reading the converted values of a channel group 
 (raw, without further scaling, alignment according precompile switch ADC_RESULT_ALIGNMENT).*/
 typedef sint16 Adc_ValueGroupType;
@@ -74,7 +72,7 @@ typedef uint8 Adc_GroupPriorityType;
 typedef uint8 Adc_StreamNumSampleType;
 
 /* Typee for Configuring the number of input channels per hw unit */
-typedef uint8 Adc_NumberOfInputChannels;
+typedef uint8 Adc_InputNumChType;
 
 
 /* Type for configuring the access mode to group conversion results. */
@@ -127,7 +125,7 @@ typedef enum{ADC_SERVICE_ACCEPTED=0, ADC_NOT_INIT, ADC_SEQUENCE_ERROR, ADC_HW_FA
 
 
 /* pointer to function to use it for call backs */
-typedef void (*Adc_NotificationType)(void);
+typedef  void(*Adc_NotificationType)(void);
 
 /* Type for assignment of channels to a channel group */
 typedef uint8 Adc_GroupDefType;
@@ -147,23 +145,22 @@ typedef struct {
 	Adc_GroupAccessModeType			AdcGroupAccessMode;
 	Adc_GroupConvModeType		   	AdcGroupConversionMode;
 	
-	#if(ADC_PRIORITY_IMPLEMENTATION==ADC_PRIORITY_HW_SW)
+
 		Adc_GroupPriorityType			AdcGroupPriority;
-	#endif
+	
 	
 	Adc_TriggerSourceType			AdcGroupTriggSrc;
 	
-	#if(ADC_HW_TRIGGER_API==STD_ON)
 		Adc_HwTriggerSourceType			AdcHwTriggerSource;
 		Adc_HwTriggerSignalType			AdcHwTriggerSignal;
-	#endif
+	
 	
   Adc_StreamBufferModeType		AdcStreamingBufferMode;
 	Adc_StreamNumSampleType			AdcStreamingNumSamples;
 	
-	#if(ADC_GRP_NOTIF_CAPABILITY==STD_ON)
+	
 		Adc_NotificationType			AdcNotification;
-	#endif
+
 	
 	Adc_GroupReplacementType 		AdcGroupReplacement;
 	Adc_GroupDefType				AdcGroupDefinition[ADC_MAXIMUM_CHANNELS_PER_GROUP];
@@ -184,7 +181,7 @@ typedef struct {
 	boolean Adc_Sequencer;
 	
 	/* Hold the number of input channels per hw unit*/
-	Adc_NumberOfInputChannelsType Adc_NumberOfInputChannels;
+	Adc_InputNumChType Adc_NumberOfInputChannels;
 	
 	/* Pointer to the Adc_ChannelGroup*/
 	Adc_GroupType Adc_Group;

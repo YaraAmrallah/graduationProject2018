@@ -9,21 +9,19 @@ Adc_ChannelGroupConfigType Adc_ChannelGroupConfig[NUMBER_OF_CHANNEL_GROUPS]=
 		ADC_CONV_MODE_CONTINUOUS,		/* Group_Conv_Mode	*/
 		/* preprocessor remove unconfigured variable in preprossing time */
 	  /* removed not configured by sw */
-		#if(ADC_PRIORITY_IMPLEMENTATION==ADC_PRIORITY_HW_SW)
-			0,
-		#endif
+		0,
 		ADC_TRIGG_SRC_SW,			/* Group Event Trigger */
-		#if(ADC_HW_TRIGGER_API==STD_ON)
-			EXTERNAL,
-			ADC_HW_TRIG_RISING_EDGE,
-		#endif
+		EXTERNAL,
+		ADC_HW_TRIG_RISING_EDGE,
+		
 		
 		ADC_STREAM_BUFFER_CIRCULAR,	/* Software buffer mode */
-		1,			            			
-		#if(ADC_GRP_NOTIF_CAPABILITY==STD_ON)
-			NULL_PTR,
-		#endif
-		ADC_GROUP_REPL_ABORT_RESTART, 
+		1,	
+		
+		((void*)0),
+		
+		ADC_GROUP_REPL_ABORT_RESTART,
+		
 		{
 			ADC_CHANNEL_4,
 			ADC_CHANNEL_5,

@@ -9,18 +9,18 @@
 
 
 /* Adc_Channels id for TM4C123GH6PM */
-#define ADC_CHANNEL_0                           (0u)
-#define ADC_CHANNEL_1							(1u)
-#define ADC_CHANNEL_2							(2u)
-#define ADC_CHANNEL_3 							(3u)
-#define ADC_CHANNEL_4							(4u)
-#define ADC_CHANNEL_5							(5u)
-#define ADC_CHANNEL_6 							(6u)
-#define ADC_CHANNEL_7							(7u)
-#define ADC_CHANNEL_8							(8u)	
-#define ADC_CHANNEL_9							(9u)
-#define ADC_CHANNEL_10							(10u)
-#define ADC_CHANNEL_11							(11u)
+#define ADC_CHANNEL_0                           0u
+#define ADC_CHANNEL_1							1u
+#define ADC_CHANNEL_2							2u
+#define ADC_CHANNEL_3 							3u
+#define ADC_CHANNEL_4							4u
+#define ADC_CHANNEL_5							5u
+#define ADC_CHANNEL_6 							6u
+#define ADC_CHANNEL_7							7u
+#define ADC_CHANNEL_8							8u	
+#define ADC_CHANNEL_9							9u
+#define ADC_CHANNEL_10							10u
+#define ADC_CHANNEL_11							11u
 
 /* Adc Modules for TM4C123GH6PM */
 #define ADC_MODULE_0							(0u)
@@ -38,7 +38,7 @@
 #define ADC_DEINIT_API 							STD_OFF		
 
 /* used to enable or disable Development error detection for Adc driver */
-#define ADC_DEV_ERROR_DETECT					STD_OFF		
+#define ADC_DEV_ERROR_DETECT					STD_OFF
 
 /* Enable or diable the limit checking feature in the adc driver */ 
 #define ADC_ENABLE_LIMIT_CHECK					STD_OFF		
@@ -49,7 +49,7 @@ is not evaluated.*/
 #define ADC_ENABLE_QUEUING						STD_OFF		
 
 /* Adds / removes the services Adc_StartGroupConversion() and Adc_StopGroupConversion() from the code. */
-#define ADC_ENABLE_START_STOP_GROUP_API			STD_ON
+#define ADC_ENABLE_START_STOP_GROUP_API			STD_OFF
 
 /* Determines, if the group notification mechanism (the functions to enable and disable the notifications) is available at runtime.*/
 #define ADC_GRP_NOTIF_CAPABILITY 				STD_OFF
@@ -96,24 +96,32 @@ true: Adc_GetVersionInfo() can be used. false: Adc_GetVersionInfor() can not be 
 #define NUMBER_OF_CHANNEL_GROUPS (1u)
 
 
-/*********************************Sample Sequencer Priority*****************************************************/
+/*********************************Sample Sequencer Priority in the adc module*****************************************************/
 /** 
   * User Specify the priority of the four sequencer 
   * The priority should be unique and takes values
   * From 0 to 3 ( 0 Highest, 3 Lowest) or consistent results will not be provided
   */
 // Module 0
-#define SAMPLESEQ0M0PRI	3
-#define SAMPLESEQ1M0PRI	2
-#define SAMPLESEQ2M0PRI	1
-#define SAMPLESEQ3M0PRI	0
+#define ADC_0_SS_0_MODULE_PRI	3
+#define ADC_0_SS_1_MODULE_PRI	2
+#define ADC_0_SS_2_MODULE_PRI	1
+#define ADC_0_SS_3_MODULE_PRI	0
 
 // Module 1
-#define SAMPLESEQ0M1PRI	0
-#define SAMPLESEQ1M1PRI	1
-#define SAMPLESEQ2M1PRI	2
-#define SAMPLESEQ3M1PRI	3
+#define ADC_1_SS_0_MODULE_PRI	0
+#define ADC_1_SS_1_MODULE_PRI	1
+#define ADC_1_SS_2_MODULE_PRI	2
+#define ADC_1_SS_3_MODULE_PRI	3
 
 
-
+/****************************** ISRs Priority for the NVTable from 0 to 7 **************************************************/
+#define ADC_0_SS0_HANDLER_PRI			0
+#define ADC_0_SS1_HANDLER_PRI			0
+#define ADC_0_SS2_HANDLER_PRI			0
+#define ADC_0_SS3_HANDLER_PRI			0
+#define ADC_1_SS0_HANDLER_PRI			0
+#define ADC_1_SS1_HANDLER_PRI			0
+#define ADC_1_SS2_HANDLER_PRI			0
+#define ADC_1_SS3_HANDLER_PRI			0
 #endif

@@ -1,60 +1,28 @@
+#include "Adc_Reg.h"
 #include "Adc.h"
 
-/* Number of hw units not configurable hw limitations */
-#define NUMBER_OF_HW_UNITS       (8u)
+
 
 /* defines used in reporting development errors to the Development Error module */
 #define ADC_MODULE_ID 					(uint16)123		/* List of Basic Software Modules */
 #define ADC_INSTANCE_ID 				(uint8)0		/* on;y one adc driver */
 
-/* API Ids from ADC_SWS document */
-#define ADC_INIT_SID													0x00
-#define ADC_SETUP_RESULT_BUFFER_SID 					0x0c
-#define ADC_DEINIT_SID												0x01
-#define ADC_START_GROUP_CONVERSION_SID				0x02
-#define ADC_STOP_GROUP_CONVERSION_SID					0x03
-#define ADC_READ_GROUP_SID										0x04
-#define ADC_ENABLE_HARDWARE_TRIGGER_SID				0x05
-#define ADC_DISABLE_HARDWARE_TRIGGER_SID			0x06
-#define ADC_ENABLE_GROUP_NOTIFICATION_SID			0x07
-#define ADC_DISABLE_GROUP_NOTIFICATION_SID 		0x08
-#define ADC_GET_GROUP_STATUS_SID							0x09
-#define ADC_GET_STREAM_LAST_POINTER_SID				0x0b
-#define ADC_GET_VERSION_INFO									0x0a
-#define ADC_SET_POWER_STATE										0x10
-#define ADC_GET_CURRENT_POWER_STATE						0x11
-#define ADC_GET_TARGET_POWER_STATE						0x12
-#define ADC_PREPARE_POWER_STATE								0x13
-
-
-
-/* Errors IDs P.48 Adc_SWS */
-#define ADC_E_UNINIT						0x0A
-#define ADC_E_BUSY							0x0B
-#define ADC_E_IDLE							0x0C
-#define ADC_E_ALREADY_INITIALIZED 			0x0D
-#define ADC_E_PARAM_POINTER					0x0E
-#define ADC_E_PARAM_GROUP					0x15
-#define ADC_E_WRONG_CONV_MODE				0x16
-#define ADC_E_WRONG_TRIGG_SRC				0x17
-#define ADC_E_NOTIFY_CAPABILITY				0x18
-#define ADC_E_BUFFER_UNINIT					0x19
-#define ADC_E_NOT_DISENGAGED				0x1A
-#define ADC_E_POWER_STATE_NOT_SUPPORTED		0x1B
-#define ADC_E_TRANSITION_NOT_POSSIBLE		0x1C
-#define ADC_E_PERIPHERAL_NOT_PREPARED		0x1D
-
-
+/* Number of hw units not configurable hw limitations */
+#define NUMBER_OF_HW_UNITS       (8u)
+#define HW_UNIT_0								 (0u)
+#define HW_UNIT_1								 (1u)
+#define HW_UNIT_2								 (2u)
+#define HW_UNIT_3								 (3u)
+#define HW_UNIT_4								 (4u)
+#define HW_UNIT_5								 (5u)
+#define HW_UNIT_6								 (6u)
+#define HW_UNIT_7								 (7u)
 /* base address for modules to facilitate accessing the registers by adding the required register offset */
 static const uint32 Adc_ModuleBaseAddressLut[]=
 {
 	ADC0BASEADDRESS,
 	ADC1BASEADDRESS
 };
-
-
-
-
 
 
 /* constants depends on hardware limitations for TM4C123GH6PM */
@@ -153,8 +121,17 @@ static const uint32 Adc_SsFIFO[]=
 	module ID is the row number where clumn number is the sequencer ID */
 static const uint32 Adc_SSIRQ[][4]=
 {
-	{ADC0SS0PRINUMBER, ADC0SS1PRINUMBER, ADC0SS2PRINUMBER, ADC0SS3PRINUMBER},
-	{ADC1SS0PRINUMBER, ADC1SS1PRINUMBER, ADC1SS2PRINUMBER, ADC1SS3PRINUMBER}
+	{ADC_0_SS_0_PRI_NUMBER, ADC_0_SS_1_PRI_NUMBER, ADC_0_SS_2_PRI_NUMBER, ADC_0_SS_3_PRI_NUMBER},
+	{ADC_1_SS_0_PRI_NUMBER, ADC_1_SS_1_PRI_NUMBER, ADC_1_SS_2_PRI_NUMBER, ADC_1_SS_3_PRI_NUMBER}
+};
+
+/* 2D array contains the handlers priority */
+/* for every sequencer */
+/* preconfigured in Adc_Cfg.h file */
+static const uint32 Adc_SSHandlerPri[][4]=
+{
+	{ADC_0_SS0_HANDLER_PRI, ADC_0_SS1_HANDLER_PRI, ADC_0_SS2_HANDLER_PRI, ADC_0_SS3_HANDLER_PRI},
+	{ADC_0_SS0_HANDLER_PRI, ADC_1_SS1_HANDLER_PRI, ADC_1_SS2_HANDLER_PRI, ADC_1_SS3_HANDLER_PRI}
 };
 
 /* The driver used this array to pass the idx
@@ -192,7 +169,7 @@ void Adc_Init(const Adc_ConfigType* ConfigPtr)
 		if(Adc_DriverState == ADC_DRIVER_INITIALIZED)
 		{
 			/* report the error to the det module */
-			Det_ReportError(ADC_MODULE_ID, ADC_INSTANCE_ID, ADC_INIT_SID, ADC_E_ALREADY_INITIALIZED)
+			Det_ReportError(ADC_MODULE_ID, ADC_INSTANCE_ID, ADC_INIT_SID, ADC_E_ALREADY_INITIALIZED);
 		}
 	#endif
 
@@ -206,7 +183,7 @@ void Adc_Init(const Adc_ConfigType* ConfigPtr)
 		RCGC0_REG |= ((ConfigPtr->Adc_Module0SamplingSpeed) << MAXADC0SPD);
 		
 		/* Configure sequencer priorities values in register */
-		ADCSSPRI_REG(ADC_MODULE_0)= CONC(SAMPLESEQ0M0PRI, SAMPLESEQ1M0PRI, SAMPLESEQ2M0PRI, SAMPLESEQ3M0PRI);
+		ADCSSPRI_REG(ADC_MODULE_0)= CONC(ADC_0_SS_0_MODULE_PRI, ADC_0_SS_1_MODULE_PRI, ADC_0_SS_2_MODULE_PRI, ADC_0_SS_3_MODULE_PRI);
 
 	}
 	else 
@@ -224,7 +201,7 @@ void Adc_Init(const Adc_ConfigType* ConfigPtr)
 		RCGC0_REG |= ((ConfigPtr->Adc_Module1SamplingSpeed) << MAXADC1SPD);
 		
 		/* Configure sequencer priorities values in register */
-		ADCSSPRI_REG(ADC_MODULE_1) = CONC(SAMPLESEQ0M1PRI, SAMPLESEQ1M1PRI, SAMPLESEQ2M1PRI, SAMPLESEQ3M1PRI);
+		ADCSSPRI_REG(ADC_MODULE_1) = CONC(ADC_1_SS_0_MODULE_PRI, ADC_1_SS_1_MODULE_PRI, ADC_1_SS_2_MODULE_PRI, ADC_1_SS_3_MODULE_PRI);
 		
 	}
 	else 
@@ -341,28 +318,28 @@ Std_ReturnType Adc_ReadGroup(
 					)
 {
 	Std_ReturnType Std_Return = E_OK;
-	uint8_least Adc_GebroLoopIdx=0;
-	uint8 NumberOfChannels;
-	uint8 NumberOfSamples;
-	Adc_HwUnitType		Adc_HwUnitId;
-	Adc_HwUnitConfigType* HwUnitPtr;
-	Adc_ChannelGroupConfigType* ChannelGroupPtr;
 	#if(ADC_DEV_ERROR_DETECT==STD_ON)
 						if(Group >= NUMBER_OF_CHANNEL_GROUPS)
 						{
 							Det_ReportError(ADC_MODULE_ID, ADC_INSTANCE_ID, ADC_READ_GROUP_SID, ADC_E_PARAM_GROUP);
+							Std_Return = E_NOT_OK;
 						}
 						if(Adc_DriverState == ADC_DRIVER_NOT_INIT)
 						{
 							Det_ReportError(ADC_MODULE_ID, ADC_INSTANCE_ID, ADC_READ_GROUP_SID, ADC_E_UNINIT);
+							Std_Return = E_NOT_OK;
 						}
+						else
 	#endif
-	Adc_HwUnitId = Adc_ChannelGroupHwUnitId[Group];
-	HwUnitPtr = &Adc_HwUnitConfig[Adc_HwUnitId];
-	ChannelGroupPtr= &Adc_ChannelGroupConfig[Group];
-	NumberOfChannels=HwUnitPtr->Adc_NumberOfInputChannels;
-	NumberOfSamples=ChannelGroupPtr->AdcStreamingNumSamples;
-	for(Adc_GebroLoopIdx = 0; Adc_GebroLoopIdx< ((GrpPtr->AdcChannelsNum)*(GrpPtr->AdcStreamingNumSamples)) ; loop_idx++)
+	{
+	uint8_least Adc_GebroLoopIdx=0;
+	Adc_HwUnitType Adc_HwUnitId=Adc_ChannelGroupHwUnitId[Group];
+	Adc_HwUnitConfigType* HwUnitPtr=&Adc_HwUnitConfig[Adc_HwUnitId];
+	Adc_ChannelGroupConfigType* ChannelGroupPtr=&Adc_ChannelGroupConfig[Group];
+	Adc_InputNumChType NumberOfChannels=HwUnitPtr->Adc_NumberOfInputChannels;
+	Adc_StreamNumSampleType NumberOfSamplesReq=ChannelGroupPtr->AdcStreamingNumSamples;
+
+	for(Adc_GebroLoopIdx = 0; Adc_GebroLoopIdx<((NumberOfChannels)*(NumberOfSamplesReq)); Adc_GebroLoopIdx++)
 	{
 				(*(DataBufferPtr+Adc_GebroLoopIdx)) = (*((DataBufferPtrAddr[Group])+Adc_GebroLoopIdx));
 	}
@@ -374,17 +351,162 @@ Std_ReturnType Adc_ReadGroup(
 	{
 		Adc_GroupStatus[Group]=ADC_BUSY;
 	}
+}
 	return Std_Return;
 }
 #endif
 
+
  /* Returns the conversion status of the requested ADC Channel group. */
 Adc_StatusType Adc_GetGroupStatus(Adc_GroupType Group)
 {
-	Adc_StatusType Adc_Status;
 	
-	return Adc_Status;
+	Adc_StatusType Adc_Status = ADC_IDLE;
+#if(ADC_DEV_ERROR_DETECT==STD_ON)
+						if(Group >= NUMBER_OF_CHANNEL_GROUPS)
+						{
+							Det_ReportError(ADC_MODULE_ID, ADC_INSTANCE_ID, ADC_GET_GROUP_STATUS_SID, ADC_E_PARAM_GROUP);
+							Adc_Status = ADC_IDLE;
+						}
+						if(Adc_DriverState == ADC_DRIVER_NOT_INIT)
+						{
+							Det_ReportError(ADC_MODULE_ID, ADC_INSTANCE_ID, ADC_GET_GROUP_STATUS_SID, ADC_E_UNINIT);
+								Adc_Status = ADC_IDLE;
+						}
+						else 
+#endif
+{
+	
+	uint8_least Adc_GebroLoopIdx=0;
+	Adc_HwUnitType		Adc_HwUnitId = Adc_ChannelGroupHwUnitId[Group];
+	Adc_HwUnitConfigType* HwUnitPtr = &Adc_HwUnitConfig[Adc_HwUnitId];
+	Adc_ChannelGroupConfigType* ChannelGroupPtr=&Adc_ChannelGroupConfig[Group];
+	Adc_InputNumChType NumberOfChannels=HwUnitPtr->Adc_NumberOfInputChannels;
+	Adc_StreamNumSampleType NumberOfSamplesReq=ChannelGroupPtr->AdcStreamingNumSamples;
+	Adc_ModuleType Adc_ModuleId = HwUnitPtr->AdcModuleId;
+	Adc_SequencerType Adc_SequencerId= HwUnitPtr->AdcSequencerId;
+	Adc_StreamNumSampleType Samples_Finished = Adc_ChannelGroupFinishedSamples[Group];
+				Adc_Status = 	Adc_GroupStatus[Group];
+			  if(((ADCRIS_REG(Adc_ModuleId)) & (1<<(Adc_SequencerId))) != 0)
+				{
+				// Acknowledge that conversion by clearing the interrupt flag bit.in ADCISC Register.
+			  ADCISC_REG(Adc_ModuleId) |= (1<<Adc_SequencerId);
+			
+				// Move the result in the group result buffer.
+				for(Adc_GebroLoopIdx = (Samples_Finished*NumberOfSamplesReq);
+				Adc_GebroLoopIdx < (Samples_Finished*(NumberOfSamplesReq+1)) ; Adc_GebroLoopIdx++)
+				{
+					*((DataBufferPtrAddr[Group])+Adc_GebroLoopIdx) =  ADC_SSFIFO((Adc_ModuleId), (Adc_SequencerId));
+				}				
+				// Increment the number of samples finished by one
+				(Samples_Finished)++;
+				// check if the stream has finished.
+				if(Samples_Finished ==NumberOfSamplesReq)
+				{
+					    // put the status to stream completed.
+							// start the number of samples finised from zero again.
+								Adc_GroupStatus[Group] = ADC_STREAM_COMPLETED;
+								Adc_Status = Adc_GroupStatus[Group];
+							 Adc_ChannelGroupFinishedSamples[Group]=0;
+				}
+				else 
+				{
+					Adc_GroupStatus[Group] = ADC_COMPLETED;
+					Adc_Status = Adc_GroupStatus[Group];
+				}
+			}
+		}
+	return 	Adc_GroupStatus[Group];
 }
+
+#if(ADC_GRP_NOTIF_CAPABILITY==STD_ON)
+/***************************************************************************************
+ * This function used to enable interrupt for specific group
+ * takes group id.
+ ***************************************************************************************/
+void Adc_EnableGroupNotification(Adc_GroupType Group)
+{
+	
+	#if(ADC_DEV_ERROR_DETECT==STD_ON)
+						if(Group >= NUMBER_OF_CHANNEL_GROUPS)
+						{
+							Det_ReportError(ADC_MODULE_ID, ADC_INSTANCE_ID, ADC_ENABLE_GROUP_NOTIFICATION_SID, ADC_E_PARAM_GROUP);
+						}
+						if(Adc_DriverState == ADC_DRIVER_NOT_INIT)
+						{
+							Det_ReportError(ADC_MODULE_ID, ADC_INSTANCE_ID, ADC_ENABLE_GROUP_NOTIFICATION_SID, ADC_E_UNINIT);
+						}
+						else
+						
+	#endif
+	{
+	Adc_HwUnitType		Adc_HwUnitId = Adc_ChannelGroupHwUnitId[Group];
+	Adc_HwUnitConfigType* HwUnitPtr = &Adc_HwUnitConfig[Adc_HwUnitId];
+	Adc_ChannelGroupConfigType* ChannelGroupPtr=&Adc_ChannelGroupConfig[Group];
+	Adc_ModuleType Adc_ModuleId = HwUnitPtr->AdcModuleId;
+	Adc_SequencerType Adc_SequencerId= HwUnitPtr->AdcSequencerId;
+	
+	#if(ADC_DEV_ERROR_DETECT==STD_ON)
+	if((ChannelGroupPtr->AdcNotification) == NULL_PTR)
+	{
+		Det_ReportError(ADC_MODULE_ID, ADC_INSTANCE_ID, ADC_ENABLE_GROUP_NOTIFICATION_SID, ADC_E_NOTIF_CAPABILITY);
+	}
+	else
+	#endif
+	{	
+	// Group Notificaion is enabled.
+	Adc_ChannelGroupNotificEnabled[Group] = TRUE;
+	
+	// Configure the interrupt by enabling and arming the interrupt.
+	ADCIM_REG(Adc_ModuleId) |= (1 << Adc_SequencerId);
+	SET_INT_PRI(Adc_SSIRQ[Adc_ModuleId][Adc_SequencerId], Adc_SSHandlerPri[Adc_ModuleId][Adc_SequencerId]);
+	EN_INT(Adc_SSIRQ[Adc_ModuleId][Adc_SequencerId]);	
+	}
+}
+}
+
+
+/* Disables the notification mechanism for the requested ADC Channel group. */
+void Adc_DisableGroupNotification(Adc_GroupType Group)
+{
+	#if(ADC_DEV_ERROR_DETECT==STD_ON)
+						if(Group >= NUMBER_OF_CHANNEL_GROUPS)
+						{
+							Det_ReportError(ADC_MODULE_ID, ADC_INSTANCE_ID, ADC_ENABLE_GROUP_NOTIFICATION_SID, ADC_E_PARAM_GROUP);
+						}
+						if(Adc_DriverState == ADC_DRIVER_NOT_INIT)
+						{
+							Det_ReportError(ADC_MODULE_ID, ADC_INSTANCE_ID, ADC_ENABLE_GROUP_NOTIFICATION_SID, ADC_E_UNINIT);
+						}
+						else
+						
+	#endif
+	{
+	Adc_HwUnitType		Adc_HwUnitId = Adc_ChannelGroupHwUnitId[Group];
+	Adc_HwUnitConfigType* HwUnitPtr = &Adc_HwUnitConfig[Adc_HwUnitId];
+	Adc_ChannelGroupConfigType* ChannelGroupPtr=&Adc_ChannelGroupConfig[Group];
+	Adc_ModuleType Adc_ModuleId = HwUnitPtr->AdcModuleId;
+	Adc_SequencerType Adc_SequencerId= HwUnitPtr->AdcSequencerId;
+	
+	#if(ADC_DEV_ERROR_DETECT==STD_ON)
+	if((ChannelGroupPtr->AdcNotification) == NULL_PTR)
+	{
+		Det_ReportError(ADC_MODULE_ID, ADC_INSTANCE_ID, ADC_ENABLE_GROUP_NOTIFICATION_SID, ADC_E_NOTIF_CAPABILITY);
+	}
+	else
+	#endif
+	{
+	// Group Notificaion is Disabled.
+	Adc_ChannelGroupNotificEnabled[Group] = FALSE;
+	
+	// Configure the interrupt by enabling and arming the interrupt.
+	ADCIM_REG(Adc_ModuleId) &= (~(1<<Adc_SequencerId));
+	}
+}
+}
+#endif
+
+
 /* reentrant function 
    Synchronus function used in init one sequencer */
 static void Adc_ConfigureSequencern(Adc_GroupType Group)
@@ -429,14 +551,241 @@ static void Adc_ConfigureSequencern(Adc_GroupType Group)
 	if((ChannelGroupPtr->AdcGroupTriggSrc) == ADC_TRIGG_SRC_SW)
 	{
 		ADCEMUX_REG(Adc_ModuleId) |= ((ChannelGroupPtr->AdcGroupConversionMode) << ((Adc_SequencerId)*4));
+		/* enable the sequencer */
+		ADCACTSS_REG(Adc_ModuleId) |= (1 << (Adc_SequencerId));	
 	}
 	else 
 	{
 		#if(ADC_HW_TRIGGER_API==STD_ON)
-			ADCEMUX_REG(Adc_ModuleId) |= ((ChannelGroupPtr -> AdcHwTriggerSource) << ((ChannelGroupPtr->AdcSequencer)*4));
+			ADCEMUX_REG(Adc_ModuleId) |= ((ChannelGroupPtr->AdcHwTriggerSource) << ((Adc_SequencerId)*4));
+			/* we should use apis from functions to configure the hw event also here */
+			/* enable sequencer in enable hw trigger api */
 		#endif
 	}
-	/* enable the sequencer */
-	ADCACTSS_REG(Adc_ModuleId) |= (1 << (Adc_SequencerId));	
 }
+
+
+
+#if(ADC_GRP_NOTIF_CAPABILITY==STD_ON)
+//*************************************************************************************************
+//                                ADC_Handlers
+//*************************************************************************************************
+/**
+ * In the ISR function I increment the number of conversion done till now.
+ * transfer the result in the group buffer.
+ * Check whether to fire the call back, this decision depends on the number of samples...
+ * configured by the user.
+ */
+void ADC0SS0_Handler(void)
+{
+	Adc_HwUnitConfigType* HwUnitPtr = &Adc_HwUnitConfig[HW_UNIT_0];
+	Adc_ChannelGroupConfigType* AdcChannelGroup= &Adc_ChannelGroupConfig[HwUnitPtr->Adc_Group];
+	Adc_StreamNumSampleType Samples_Finished =Adc_ChannelGroupFinishedSamples[HwUnitPtr->Adc_Group];
+	Adc_InputNumChType Ch_Num = HwUnitPtr->Adc_NumberOfInputChannels;
+	uint8_least Adc_GebroLoopIdx=0;
+
+	for(Adc_GebroLoopIdx = (Samples_Finished*(Ch_Num));(Adc_GebroLoopIdx<(Ch_Num*(Samples_Finished+1)));Adc_GebroLoopIdx++)
+	{
+		(*((DataBufferPtrAddr[HwUnitPtr->Adc_Group])+Adc_GebroLoopIdx)) = ADC_SSFIFO(ADC_MODULE_0,ADC_SEQUENCER_0);
+	}
+	Samples_Finished++;
+	if(Samples_Finished == (AdcChannelGroup->AdcStreamingNumSamples))
+	{
+		 Samples_Finished=0;
+		 Adc_GroupStatus[HwUnitPtr->Adc_Group]=ADC_STREAM_COMPLETED;
+		(AdcChannelGroup->AdcNotification());
+	}
+	else
+	{
+		 Adc_GroupStatus[HwUnitPtr->Adc_Group]=ADC_COMPLETED;
+	}
+	Adc_ChannelGroupFinishedSamples[HwUnitPtr->Adc_Group] = Samples_Finished;
+}
+
+void ADC0SS1_Handler(void)
+{
+	Adc_HwUnitConfigType* HwUnitPtr = &Adc_HwUnitConfig[HW_UNIT_1];
+	Adc_ChannelGroupConfigType* AdcChannelGroup= &Adc_ChannelGroupConfig[HwUnitPtr->Adc_Group];
+	Adc_StreamNumSampleType Samples_Finished =Adc_ChannelGroupFinishedSamples[HwUnitPtr->Adc_Group];
+	Adc_InputNumChType Ch_Num = HwUnitPtr->Adc_NumberOfInputChannels;
+	uint8_least Adc_GebroLoopIdx=0;
+
+	for(Adc_GebroLoopIdx = (Samples_Finished*(Ch_Num));(Adc_GebroLoopIdx<(Ch_Num*(Samples_Finished+1)));Adc_GebroLoopIdx++)
+	{
+		(*((DataBufferPtrAddr[HwUnitPtr->Adc_Group])+Adc_GebroLoopIdx)) = ADC_SSFIFO(ADC_MODULE_0, ADC_SEQUENCER_1);
+	}
+	Samples_Finished++;
+	if(Samples_Finished == (AdcChannelGroup->AdcStreamingNumSamples))
+	{
+		 Samples_Finished=0;
+		 Adc_GroupStatus[HwUnitPtr->Adc_Group]=ADC_STREAM_COMPLETED;
+		(AdcChannelGroup->AdcNotification());
+	}
+	else
+	{
+		 Adc_GroupStatus[HwUnitPtr->Adc_Group]=ADC_COMPLETED;
+	}
+	Adc_ChannelGroupFinishedSamples[HwUnitPtr->Adc_Group] = Samples_Finished;
+}	
+void ADC0SS2_Handler(void)
+{
+	Adc_HwUnitConfigType* HwUnitPtr = &Adc_HwUnitConfig[HW_UNIT_3];
+	Adc_ChannelGroupConfigType* AdcChannelGroup= &Adc_ChannelGroupConfig[HwUnitPtr->Adc_Group];
+	Adc_StreamNumSampleType Samples_Finished =Adc_ChannelGroupFinishedSamples[HwUnitPtr->Adc_Group];
+	Adc_InputNumChType Ch_Num = HwUnitPtr->Adc_NumberOfInputChannels;
+	uint8_least Adc_GebroLoopIdx=0;
+
+	for(Adc_GebroLoopIdx = (Samples_Finished*(Ch_Num));(Adc_GebroLoopIdx<(Ch_Num*(Samples_Finished+1)));Adc_GebroLoopIdx++)
+	{
+		(*((DataBufferPtrAddr[HwUnitPtr->Adc_Group])+Adc_GebroLoopIdx)) = ADC_SSFIFO(ADC_MODULE_0,ADC_SEQUENCER_2);
+	}
+	Samples_Finished++;
+	if(Samples_Finished == (AdcChannelGroup->AdcStreamingNumSamples))
+	{
+		 Samples_Finished=0;
+		 Adc_GroupStatus[HwUnitPtr->Adc_Group]=ADC_STREAM_COMPLETED;
+		(AdcChannelGroup->AdcNotification());
+	}
+	else
+	{
+		 Adc_GroupStatus[HwUnitPtr->Adc_Group]=ADC_COMPLETED;
+	}
+	Adc_ChannelGroupFinishedSamples[HwUnitPtr->Adc_Group] = Samples_Finished;
+}	
+
+void ADC0SS3_Handler(void)
+{
+  Adc_HwUnitConfigType* HwUnitPtr = &Adc_HwUnitConfig[HW_UNIT_4];
+	Adc_ChannelGroupConfigType* AdcChannelGroup= &Adc_ChannelGroupConfig[HwUnitPtr->Adc_Group];
+	Adc_StreamNumSampleType Samples_Finished =Adc_ChannelGroupFinishedSamples[HwUnitPtr->Adc_Group];
+	Adc_InputNumChType Ch_Num = HwUnitPtr->Adc_NumberOfInputChannels;
+	uint8_least Adc_GebroLoopIdx=0;
+
+	for(Adc_GebroLoopIdx = (Samples_Finished*(Ch_Num));(Adc_GebroLoopIdx<(Ch_Num*(Samples_Finished+1)));Adc_GebroLoopIdx++)
+	{
+		(*((DataBufferPtrAddr[HwUnitPtr->Adc_Group])+Adc_GebroLoopIdx)) = ADC_SSFIFO(ADC_MODULE_0,ADC_SEQUENCER_3);
+	}
+	Samples_Finished++;
+	if(Samples_Finished == (AdcChannelGroup->AdcStreamingNumSamples))
+	{
+		 Samples_Finished=0;
+		 Adc_GroupStatus[HwUnitPtr->Adc_Group]=ADC_STREAM_COMPLETED;
+		(AdcChannelGroup->AdcNotification());
+	}
+	else
+	{
+		 Adc_GroupStatus[HwUnitPtr->Adc_Group]=ADC_COMPLETED;
+	}
+	Adc_ChannelGroupFinishedSamples[HwUnitPtr->Adc_Group] = Samples_Finished;
+}	
+//*************************************************************************************************************
+void ADC1SS0_Handler(void)
+{
+	Adc_HwUnitConfigType* HwUnitPtr = &Adc_HwUnitConfig[HW_UNIT_5];
+	Adc_ChannelGroupConfigType* AdcChannelGroup= &Adc_ChannelGroupConfig[HwUnitPtr->Adc_Group];
+	Adc_StreamNumSampleType Samples_Finished =Adc_ChannelGroupFinishedSamples[HwUnitPtr->Adc_Group];
+	Adc_InputNumChType Ch_Num = HwUnitPtr->Adc_NumberOfInputChannels;
+	uint8_least Adc_GebroLoopIdx=0;
+
+	
+	for(Adc_GebroLoopIdx = (Samples_Finished*(Ch_Num));(Adc_GebroLoopIdx<(Ch_Num*(Samples_Finished+1)));Adc_GebroLoopIdx++)
+	{
+		(*((DataBufferPtrAddr[HwUnitPtr->Adc_Group])+Adc_GebroLoopIdx)) = ADC_SSFIFO(ADC_MODULE_1,ADC_SEQUENCER_0);
+	}
+	Samples_Finished++;
+	if(Samples_Finished == (AdcChannelGroup->AdcStreamingNumSamples))
+	{
+		 Samples_Finished=0;
+		 Adc_GroupStatus[HwUnitPtr->Adc_Group]=ADC_STREAM_COMPLETED;
+		(AdcChannelGroup->AdcNotification());
+	}
+	else
+	{
+		 Adc_GroupStatus[HwUnitPtr->Adc_Group]=ADC_COMPLETED;
+	}
+	Adc_ChannelGroupFinishedSamples[HwUnitPtr->Adc_Group] = Samples_Finished;
+}
+
+void ADC1SS1_Handler(void)
+{
+	Adc_HwUnitConfigType* HwUnitPtr = &Adc_HwUnitConfig[HW_UNIT_5];
+	Adc_ChannelGroupConfigType* AdcChannelGroup= &Adc_ChannelGroupConfig[HwUnitPtr->Adc_Group];
+	Adc_StreamNumSampleType Samples_Finished =Adc_ChannelGroupFinishedSamples[HwUnitPtr->Adc_Group];
+	Adc_InputNumChType Ch_Num = HwUnitPtr->Adc_NumberOfInputChannels;
+	uint8_least Adc_GebroLoopIdx=0;
+
+
+	for(Adc_GebroLoopIdx = (Samples_Finished*(Ch_Num));(Adc_GebroLoopIdx<(Ch_Num*(Samples_Finished+1)));Adc_GebroLoopIdx++)
+	{
+		(*((DataBufferPtrAddr[HwUnitPtr->Adc_Group])+Adc_GebroLoopIdx)) = ADC_SSFIFO(ADC_MODULE_1,ADC_SEQUENCER_1);
+	}
+	Samples_Finished++;
+	if(Samples_Finished == (AdcChannelGroup->AdcStreamingNumSamples))
+	{
+		 Samples_Finished=0;
+		 Adc_GroupStatus[HwUnitPtr->Adc_Group]=ADC_STREAM_COMPLETED;
+		(AdcChannelGroup->AdcNotification());
+	}
+	else
+	{
+		 Adc_GroupStatus[HwUnitPtr->Adc_Group]=ADC_COMPLETED;
+	}
+	Adc_ChannelGroupFinishedSamples[HwUnitPtr->Adc_Group] = Samples_Finished;
+}	
+
+
+void ADC1SS2_Handler(void)
+{
+	Adc_HwUnitConfigType* HwUnitPtr = &Adc_HwUnitConfig[HW_UNIT_6];
+	Adc_ChannelGroupConfigType* AdcChannelGroup= &Adc_ChannelGroupConfig[HwUnitPtr->Adc_Group];
+	Adc_StreamNumSampleType Samples_Finished =Adc_ChannelGroupFinishedSamples[HwUnitPtr->Adc_Group];
+	Adc_InputNumChType Ch_Num = HwUnitPtr->Adc_NumberOfInputChannels;
+	uint8_least Adc_GebroLoopIdx=0;
+
+	for(Adc_GebroLoopIdx = (Samples_Finished*(Ch_Num));(Adc_GebroLoopIdx<(Ch_Num*(Samples_Finished+1)));Adc_GebroLoopIdx++)
+	{
+		(*((DataBufferPtrAddr[HwUnitPtr->Adc_Group])+Adc_GebroLoopIdx)) = ADC_SSFIFO(ADC_MODULE_1,ADC_SEQUENCER_2);
+	}
+	Samples_Finished++;
+	if(Samples_Finished == (AdcChannelGroup->AdcStreamingNumSamples))
+	{
+		 Samples_Finished=0;
+		 Adc_GroupStatus[HwUnitPtr->Adc_Group]=ADC_STREAM_COMPLETED;
+		(AdcChannelGroup->AdcNotification());
+	}
+	else
+	{
+		 Adc_GroupStatus[HwUnitPtr->Adc_Group]=ADC_COMPLETED;
+	}
+	Adc_ChannelGroupFinishedSamples[HwUnitPtr->Adc_Group] = Samples_Finished;
+}	
+
+
+
+void ADC1SS3_Handler(void)
+{
+	Adc_HwUnitConfigType* HwUnitPtr = &Adc_HwUnitConfig[HW_UNIT_7];
+	Adc_ChannelGroupConfigType* AdcChannelGroup= &Adc_ChannelGroupConfig[HwUnitPtr->Adc_Group];
+	Adc_StreamNumSampleType Samples_Finished =Adc_ChannelGroupFinishedSamples[HwUnitPtr->Adc_Group];
+	Adc_InputNumChType Ch_Num = HwUnitPtr->Adc_NumberOfInputChannels;
+	uint8_least Adc_GebroLoopIdx=0;
+
+	for(Adc_GebroLoopIdx = (Samples_Finished*(Ch_Num));(Adc_GebroLoopIdx<(Ch_Num*(Samples_Finished+1)));Adc_GebroLoopIdx++)
+	{
+		(*((DataBufferPtrAddr[HwUnitPtr->Adc_Group])+Adc_GebroLoopIdx)) = ADC_SSFIFO(ADC_MODULE_1,ADC_SEQUENCER_3);
+	}
+	Samples_Finished++;
+	if(Samples_Finished == (AdcChannelGroup->AdcStreamingNumSamples))
+	{
+		 Samples_Finished=0;
+		 Adc_GroupStatus[HwUnitPtr->Adc_Group]=ADC_STREAM_COMPLETED;
+		(AdcChannelGroup->AdcNotification());
+	}
+	else
+	{
+		 Adc_GroupStatus[HwUnitPtr->Adc_Group]=ADC_COMPLETED;
+	}
+	Adc_ChannelGroupFinishedSamples[HwUnitPtr->Adc_Group] = Samples_Finished;
+}
+#endif
 
