@@ -2,7 +2,7 @@
  * PWM.c
  *
  *  Created on: Sep 17, 2018
- *      Author: yaraa
+ *      Author: yaraa & ayman
  */
 
 /* -------------------------------------------------- Modules' Description ----------------------------------------------------------------*/
@@ -108,53 +108,14 @@ static const uint32_t PWM_ModulesBaseAddressesLut[PWM_MODULES] =
 /* A function that initializes selected PWM groups */
 PWM_CheckType PWM_Init ()
 {
-    uint8_t LoopIndex,i,j;
+    uint8_t LoopIndex ;
+
     PWM_CheckType RetVar = PWM_NOK;
     const PWM_ConfigType * CfgPtr;
 
     /* Enable/Disable Clock division */
     RCC_REG |= (CLOCK_DIVISOR_ENABLE << 20);
     RCC_REG &= (CLOCK_DIVISOR_VALUE );
-   // intiating all reg with intail values
-    for(i=0 ; i<PWM_MODULES ;i++)
-    {
- PWM_M_CTL_R(i)=0x00000000;
- PWM_SYNC_R(i) =0x00000000;
- PWM_ENABLE_R(i)=0x00000000;
- PWM_INVERT_R(i)=0x00000000;
- PWM_FAULT_R(i)= 0x00000000;
- PWM_INTEN_R(i)=0x00000000;
- PWM_RIS_R(i)=0x00000000;
- PWM_ISC_R(i)=0x00000000;
- PWM_STATUS_R(i)=0x00000000;
- PWM_FAULTVAL_R(i)=0x00000000;
- PWM_ENUPD_R(i)=0x00000000;
- PWM_MPP_R(i) =0x00000314;
-     for(j=0 ;j< PWM_GEN ;j++ )
-     {
- PWM_X_CTL_R(i,j)= 0x00000000 ;
- PWM_X_INTEN_R(i,j)=  0x00000000;
- PWM_X_RIS_R(i,j)=   0x00000000;
- PWM_X_ISC_R(i,j)=      0x00000000;
- PWM_X_LOAD_R(i,j)=     0x00000000;
- PWM_X_COUNT_R(i,j)=      0x00000000;
- PWM_X_CMPA_R(i,j)=     0x00000000;
- PWM_X_CMPB_R(i,j)=    0x00000000;
- PWM_X_GENA_R(i,j)=    0x00000000;
- PWM_X_GENB_R(i,j)=       0x00000000;
- PWM_X_DBCTL_R(i,j)=      0x00000000;
- PWM_X_DBRISE_R(i,j)=     0x00000000;
- PWM_X_DBFALL_R(i,j)=     0x00000000;
- PWM_X_FLTSRC0_R(i,j)=      0x00000000;
- PWM_X_FLTSRC1_R(i,j)=     0x00000000;
- PWM_X_MINFLTPER_R(i,j)=     0x00000000;
-
-
-     }
-
-    }
-
-
 
 
     for ( LoopIndex = 0; LoopIndex < PWM_GROUPS_NUMBER ; LoopIndex ++)
@@ -165,6 +126,13 @@ PWM_CheckType PWM_Init ()
             RetVar = PWM_OK;
 
     }
+
+
+
+
+
+
+
 
     return RetVar;
 }
@@ -235,7 +203,7 @@ PWM_CheckType PWM_GenerateLASquareWave (uint8_t PWM_ID, uint16_t PWM_Freq, float
     const PWM_ConfigType * CfgPtr;
     CfgPtr = & PWM_ConfigParam[PWM_ID];
     uint16_t load;
-    uint16_t clkFreq;
+    uint32_t clkFreq;
     uint16_t DUTY ;
     if ( PWM_ID < PWM_GROUPS_NUMBER )
     {
@@ -248,11 +216,11 @@ PWM_CheckType PWM_GenerateLASquareWave (uint8_t PWM_ID, uint16_t PWM_Freq, float
     		        /* Set PWM LOAD register value */
     		           if (CLOCK_DIVISOR_ENABLE == 1)
     		           {
-    		            clkFreq = 16000/divisor;
+    		        	   clkFreq = (SYSTEM_CLOCK*1000000)/divisor;
     		           }
     		          else
     		           {
-    		            clkFreq = 16000; /* System's clock default frequency */
+    		        	  clkFreq = (SYSTEM_CLOCK*1000000); /* System's clock default frequency */
     		           }
 
     		        load = clkFreq/PWM_Freq;
@@ -302,4 +270,6 @@ PWM_CheckType PWM_GenerateLASquareWave (uint8_t PWM_ID, uint16_t PWM_Freq, float
     return RetVar;
 
 }
+
+
 
