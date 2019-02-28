@@ -5,7 +5,22 @@
 #ifndef ADC_CFG_H
 #define ADC_CFG_H
 #include "Adc_TypeDefs.h"
-#include "../Std_Types/Std_Types.h"
+
+/*
+ * Module Version 1.0.0
+ */
+#define ADC_CFG_SW_MAJOR_VERSION              (1U)
+#define ADC_CFG_SW_MINOR_VERSION              (0U)
+#define ADC_CFG_SW_PATCH_VERSION              (0U)
+
+/*
+ * AUTOSAR Version 4.0.3
+ */
+#define ADC_CFG_AR_RELEASE_MAJOR_VERSION     (4U)
+#define ADC_CFG_AR_RELEASE_MINOR_VERSION     (3U)
+#define ADC_CFG_AR_RELEASE_PATCH_VERSION     (1U)
+
+
 
 
 /* Adc_Channels id for TM4C123GH6PM */
@@ -49,10 +64,10 @@ is not evaluated.*/
 #define ADC_ENABLE_QUEUING						STD_OFF		
 
 /* Adds / removes the services Adc_StartGroupConversion() and Adc_StopGroupConversion() from the code. */
-#define ADC_ENABLE_START_STOP_GROUP_API			STD_OFF
+#define ADC_ENABLE_START_STOP_GROUP_API			STD_ON
 
 /* Determines, if the group notification mechanism (the functions to enable and disable the notifications) is available at runtime.*/
-#define ADC_GRP_NOTIF_CAPABILITY 				STD_OFF
+#define ADC_GRP_NOTIF_CAPABILITY 				STD_ON
 
 /* Adds / removes the services Adc_EnableHardwareTrigger() and Adc_DisableHardwareTrigger() from the code. */ 
 #define ADC_HW_TRIGGER_API						STD_OFF
@@ -79,7 +94,7 @@ with lower priority levels than the group priorities for hardware triggered grou
 #define ADC_PRIORITY_IMPLEMENTATION				ADC_PRIORITY_HW
 
 /* Adds / removes the service Adc_ReadGroup() and from the code. */
-#define ADC_READ_GROUP_API						STD_OFF
+#define ADC_READ_GROUP_API						STD_ON
 
 /* Alignment of ADC raw results in ADC result buffer (left/right alignment).*/
 /* mplementation Type: Adc_ResultAlignmentType */
@@ -101,7 +116,7 @@ true: Adc_GetVersionInfo() can be used. false: Adc_GetVersionInfor() can not be 
   * User Specify the priority of the four sequencer 
   * The priority should be unique and takes values
   * From 0 to 3 ( 0 Highest, 3 Lowest) or consistent results will not be provided
-  */
+  */	
 // Module 0
 #define ADC_0_SS_0_MODULE_PRI	3
 #define ADC_0_SS_1_MODULE_PRI	2

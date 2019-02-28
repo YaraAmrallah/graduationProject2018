@@ -1,6 +1,6 @@
 #include "Adc_Reg.h"
 #include "Adc.h"
-
+#include "../GPIO.h"
 
 
 /* defines used in reporting development errors to the Development Error module */
@@ -142,7 +142,7 @@ static uint8 GroupToHandler[2][4]={{0}};
 void ADC0SS0_Handler(void);
 void ADC0SS1_Handler(void);
 void ADC0SS2_Handler(void);
-void ADC0SS3_Handler(void);
+//void ADC0Seq3_Handler(void);
 void ADC1SS0_Handler(void);
 void ADC1SS1_Handler(void);
 void ADC1SS2_Handler(void);
@@ -381,7 +381,7 @@ Adc_StatusType Adc_GetGroupStatus(Adc_GroupType Group)
 	Adc_HwUnitType		Adc_HwUnitId = Adc_ChannelGroupHwUnitId[Group];
 	Adc_HwUnitConfigType* HwUnitPtr = &Adc_HwUnitConfig[Adc_HwUnitId];
 	Adc_ChannelGroupConfigType* ChannelGroupPtr=&Adc_ChannelGroupConfig[Group];
-	Adc_InputNumChType NumberOfChannels=HwUnitPtr->Adc_NumberOfInputChannels;
+	Adc_InputNumChType Ch_Num=HwUnitPtr->Adc_NumberOfInputChannels;
 	Adc_StreamNumSampleType NumberOfSamplesReq=ChannelGroupPtr->AdcStreamingNumSamples;
 	Adc_ModuleType Adc_ModuleId = HwUnitPtr->AdcModuleId;
 	Adc_SequencerType Adc_SequencerId= HwUnitPtr->AdcSequencerId;
@@ -393,8 +393,8 @@ Adc_StatusType Adc_GetGroupStatus(Adc_GroupType Group)
 			  ADCISC_REG(Adc_ModuleId) |= (1<<Adc_SequencerId);
 			
 				// Move the result in the group result buffer.
-				for(Adc_GebroLoopIdx = (Samples_Finished*NumberOfSamplesReq);
-				Adc_GebroLoopIdx < (Samples_Finished*(NumberOfSamplesReq+1)) ; Adc_GebroLoopIdx++)
+				for(Adc_GebroLoopIdx = (Samples_Finished*Ch_Num);
+				Adc_GebroLoopIdx < (Ch_Num*(Samples_Finished+1)) ; Adc_GebroLoopIdx++)
 				{
 					*((DataBufferPtrAddr[Group])+Adc_GebroLoopIdx) =  ADC_SSFIFO((Adc_ModuleId), (Adc_SequencerId));
 				}				
@@ -589,6 +589,8 @@ void ADC0SS0_Handler(void)
 		(*((DataBufferPtrAddr[HwUnitPtr->Adc_Group])+Adc_GebroLoopIdx)) = ADC_SSFIFO(ADC_MODULE_0,ADC_SEQUENCER_0);
 	}
 	Samples_Finished++;
+	/* clear the INR bit in RIS by setting 1 in the ISC regiter */
+	 ADCISC_REG(ADC_MODULE_0) |= (1<<ADC_SEQUENCER_0);
 	if(Samples_Finished == (AdcChannelGroup->AdcStreamingNumSamples))
 	{
 		 Samples_Finished=0;
@@ -615,6 +617,8 @@ void ADC0SS1_Handler(void)
 		(*((DataBufferPtrAddr[HwUnitPtr->Adc_Group])+Adc_GebroLoopIdx)) = ADC_SSFIFO(ADC_MODULE_0, ADC_SEQUENCER_1);
 	}
 	Samples_Finished++;
+	/* clear the INR bit in RIS by setting 1 in the ISC regiter */
+	 ADCISC_REG(ADC_MODULE_0) |= (1<<ADC_SEQUENCER_1);
 	if(Samples_Finished == (AdcChannelGroup->AdcStreamingNumSamples))
 	{
 		 Samples_Finished=0;
@@ -629,7 +633,7 @@ void ADC0SS1_Handler(void)
 }	
 void ADC0SS2_Handler(void)
 {
-	Adc_HwUnitConfigType* HwUnitPtr = &Adc_HwUnitConfig[HW_UNIT_3];
+	Adc_HwUnitConfigType* HwUnitPtr = &Adc_HwUnitConfig[HW_UNIT_2];
 	Adc_ChannelGroupConfigType* AdcChannelGroup= &Adc_ChannelGroupConfig[HwUnitPtr->Adc_Group];
 	Adc_StreamNumSampleType Samples_Finished =Adc_ChannelGroupFinishedSamples[HwUnitPtr->Adc_Group];
 	Adc_InputNumChType Ch_Num = HwUnitPtr->Adc_NumberOfInputChannels;
@@ -640,6 +644,8 @@ void ADC0SS2_Handler(void)
 		(*((DataBufferPtrAddr[HwUnitPtr->Adc_Group])+Adc_GebroLoopIdx)) = ADC_SSFIFO(ADC_MODULE_0,ADC_SEQUENCER_2);
 	}
 	Samples_Finished++;
+	/* clear the INR bit in RIS by setting 1 in the ISC regiter */
+	 ADCISC_REG(ADC_MODULE_0) |= (1<<ADC_SEQUENCER_2);
 	if(Samples_Finished == (AdcChannelGroup->AdcStreamingNumSamples))
 	{
 		 Samples_Finished=0;
@@ -653,9 +659,9 @@ void ADC0SS2_Handler(void)
 	Adc_ChannelGroupFinishedSamples[HwUnitPtr->Adc_Group] = Samples_Finished;
 }	
 
-void ADC0SS3_Handler(void)
+void ADC0Seq3_Handler(void)
 {
-  Adc_HwUnitConfigType* HwUnitPtr = &Adc_HwUnitConfig[HW_UNIT_4];
+  Adc_HwUnitConfigType* HwUnitPtr = &Adc_HwUnitConfig[HW_UNIT_3];
 	Adc_ChannelGroupConfigType* AdcChannelGroup= &Adc_ChannelGroupConfig[HwUnitPtr->Adc_Group];
 	Adc_StreamNumSampleType Samples_Finished =Adc_ChannelGroupFinishedSamples[HwUnitPtr->Adc_Group];
 	Adc_InputNumChType Ch_Num = HwUnitPtr->Adc_NumberOfInputChannels;
@@ -666,22 +672,25 @@ void ADC0SS3_Handler(void)
 		(*((DataBufferPtrAddr[HwUnitPtr->Adc_Group])+Adc_GebroLoopIdx)) = ADC_SSFIFO(ADC_MODULE_0,ADC_SEQUENCER_3);
 	}
 	Samples_Finished++;
+	/* clear the INR bit in RIS by setting 1 in the ISC regiter */
+	 ADCISC_REG(ADC_MODULE_0) |= (1<<ADC_SEQUENCER_3);
 	if(Samples_Finished == (AdcChannelGroup->AdcStreamingNumSamples))
 	{
 		 Samples_Finished=0;
 		 Adc_GroupStatus[HwUnitPtr->Adc_Group]=ADC_STREAM_COMPLETED;
-		(AdcChannelGroup->AdcNotification());
 	}
 	else
 	{
 		 Adc_GroupStatus[HwUnitPtr->Adc_Group]=ADC_COMPLETED;
 	}
+  (*(AdcChannelGroup->AdcNotification))();
 	Adc_ChannelGroupFinishedSamples[HwUnitPtr->Adc_Group] = Samples_Finished;
+
 }	
 //*************************************************************************************************************
 void ADC1SS0_Handler(void)
 {
-	Adc_HwUnitConfigType* HwUnitPtr = &Adc_HwUnitConfig[HW_UNIT_5];
+	Adc_HwUnitConfigType* HwUnitPtr = &Adc_HwUnitConfig[HW_UNIT_4];
 	Adc_ChannelGroupConfigType* AdcChannelGroup= &Adc_ChannelGroupConfig[HwUnitPtr->Adc_Group];
 	Adc_StreamNumSampleType Samples_Finished =Adc_ChannelGroupFinishedSamples[HwUnitPtr->Adc_Group];
 	Adc_InputNumChType Ch_Num = HwUnitPtr->Adc_NumberOfInputChannels;
@@ -693,6 +702,8 @@ void ADC1SS0_Handler(void)
 		(*((DataBufferPtrAddr[HwUnitPtr->Adc_Group])+Adc_GebroLoopIdx)) = ADC_SSFIFO(ADC_MODULE_1,ADC_SEQUENCER_0);
 	}
 	Samples_Finished++;
+	/* clear the INR bit in RIS by setting 1 in the ISC regiter */
+	 ADCISC_REG(ADC_MODULE_1) |= (1<<ADC_SEQUENCER_0);
 	if(Samples_Finished == (AdcChannelGroup->AdcStreamingNumSamples))
 	{
 		 Samples_Finished=0;
@@ -720,6 +731,8 @@ void ADC1SS1_Handler(void)
 		(*((DataBufferPtrAddr[HwUnitPtr->Adc_Group])+Adc_GebroLoopIdx)) = ADC_SSFIFO(ADC_MODULE_1,ADC_SEQUENCER_1);
 	}
 	Samples_Finished++;
+	/* clear the INR bit in RIS by setting 1 in the ISC regiter */
+	 ADCISC_REG(ADC_MODULE_1) |= (1<<ADC_SEQUENCER_1);
 	if(Samples_Finished == (AdcChannelGroup->AdcStreamingNumSamples))
 	{
 		 Samples_Finished=0;
@@ -747,6 +760,8 @@ void ADC1SS2_Handler(void)
 		(*((DataBufferPtrAddr[HwUnitPtr->Adc_Group])+Adc_GebroLoopIdx)) = ADC_SSFIFO(ADC_MODULE_1,ADC_SEQUENCER_2);
 	}
 	Samples_Finished++;
+	/* clear the INR bit in RIS by setting 1 in the ISC regiter */
+	 ADCISC_REG(ADC_MODULE_1) |= (1<<ADC_SEQUENCER_2);
 	if(Samples_Finished == (AdcChannelGroup->AdcStreamingNumSamples))
 	{
 		 Samples_Finished=0;
@@ -774,6 +789,8 @@ void ADC1SS3_Handler(void)
 	{
 		(*((DataBufferPtrAddr[HwUnitPtr->Adc_Group])+Adc_GebroLoopIdx)) = ADC_SSFIFO(ADC_MODULE_1,ADC_SEQUENCER_3);
 	}
+	/* clear the INR bit in RIS by setting 1 in the ISC regiter */
+	 ADCISC_REG(ADC_MODULE_1) |= (1<<ADC_SEQUENCER_3);
 	Samples_Finished++;
 	if(Samples_Finished == (AdcChannelGroup->AdcStreamingNumSamples))
 	{

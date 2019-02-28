@@ -1,12 +1,13 @@
 #include "Adc.h"
 #define NUMBER_OF_HW_UNITS       (8u)
+void test(void);
 /* configuration for Adc_channel Group */
 Adc_ChannelGroupConfigType Adc_ChannelGroupConfig[NUMBER_OF_CHANNEL_GROUPS]=
 {
 	{
 		0,							/* Group_Id */
 		ADC_ACCESS_MODE_SINGLE, 	/* Group_Access_Mode */
-		ADC_CONV_MODE_CONTINUOUS,		/* Group_Conv_Mode	*/
+		ADC_CONV_MODE_ONESHOT,		/* Group_Conv_Mode	*/
 		/* preprocessor remove unconfigured variable in preprossing time */
 	  /* removed not configured by sw */
 		0,
@@ -18,14 +19,11 @@ Adc_ChannelGroupConfigType Adc_ChannelGroupConfig[NUMBER_OF_CHANNEL_GROUPS]=
 		ADC_STREAM_BUFFER_CIRCULAR,	/* Software buffer mode */
 		1,	
 		
-		((void*)0),
+		test,
 		
 		ADC_GROUP_REPL_ABORT_RESTART,
 		
 		{
-			ADC_CHANNEL_4,
-			ADC_CHANNEL_5,
-			ADC_CHANNEL_3,
 			ADC_CHANNEL_1
 		}
 	}
@@ -50,7 +48,7 @@ Adc_HwUnitConfigType Adc_HwUnitConfig[NUMBER_OF_HW_UNITS]=
 	 255	/* Pointer to the Adc_ChannelGroup*/
 	},
 	{
-	 0, /* Numeric ID of the HW Unit. */
+	 1, /* Numeric ID of the HW Unit. */
 	 ADC_MODULE_0,	/*  Numeric Id of the Adc_Module */
 	 ADC_SEQUENCER_1, /* Numberic Id of the Adc_Sequencer */
 	 FALSE, /* True: use Adc_Sequencer false: don't configure */
@@ -60,7 +58,7 @@ Adc_HwUnitConfigType Adc_HwUnitConfig[NUMBER_OF_HW_UNITS]=
 	 255	/* Pointer to the Adc_ChannelGroup*/
 	},
 	{
-	 0, /* Numeric ID of the HW Unit. */
+	 2, /* Numeric ID of the HW Unit. */
 	 ADC_MODULE_0,	/*  Numeric Id of the Adc_Module */
 	 ADC_SEQUENCER_2, /* Numberic Id of the Adc_Sequencer */
 	 FALSE, /* True: use Adc_Sequencer false: don't configure */
@@ -70,17 +68,17 @@ Adc_HwUnitConfigType Adc_HwUnitConfig[NUMBER_OF_HW_UNITS]=
 	 255	/* Pointer to the Adc_ChannelGroup*/
 	},
 	{
-	 0, /* Numeric ID of the HW Unit. */
+	 3, /* Numeric ID of the HW Unit. */
 	 ADC_MODULE_0,	/*  Numeric Id of the Adc_Module */
 	 ADC_SEQUENCER_3, /* Numberic Id of the Adc_Sequencer */
-	 FALSE, /* True: use Adc_Sequencer false: don't configure */
+	 TRUE, /* True: use Adc_Sequencer false: don't configure */
 	 /* Hold the number of input channels per hw unit*/
 	 /* maximum for this hw unit is 1 */
 	 1,			
 	 0	/* Pointer to the Adc_ChannelGroup*/
 	},
 	{
-	 0, /* Numeric ID of the HW Unit. */
+	 4, /* Numeric ID of the HW Unit. */
 	 ADC_MODULE_1,	/*  Numeric Id of the Adc_Module */
 	 ADC_SEQUENCER_0, /* Numberic Id of the Adc_Sequencer */
 	 FALSE, /* True: use Adc_Sequencer false: don't configure */
@@ -90,7 +88,7 @@ Adc_HwUnitConfigType Adc_HwUnitConfig[NUMBER_OF_HW_UNITS]=
 	 255	/* Pointer to the Adc_ChannelGroup*/
 	},
 	{
-	 0, /* Numeric ID of the HW Unit. */
+	 5, /* Numeric ID of the HW Unit. */
 	 ADC_MODULE_1,	/*  Numeric Id of the Adc_Module */
 	 ADC_SEQUENCER_1, /* Numberic Id of the Adc_Sequencer */
 	 FALSE, /* True: use Adc_Sequencer false: don't configure */
@@ -100,17 +98,17 @@ Adc_HwUnitConfigType Adc_HwUnitConfig[NUMBER_OF_HW_UNITS]=
 	 255	/* Pointer to the Adc_ChannelGroup*/
 	},
 	{
-	 0, /* Numeric ID of the HW Unit. */
+	 6, /* Numeric ID of the HW Unit. */
 	 ADC_MODULE_1,	/*  Numeric Id of the Adc_Module */
 	 ADC_SEQUENCER_2, /* Numberic Id of the Adc_Sequencer */
-	 TRUE, /* True: use Adc_Sequencer false: don't configure */
+	 FALSE, /* True: use Adc_Sequencer false: don't configure */
 	 /* Hold the number of input channels per hw unit*/
 	 /* maximum for this hw unit is 4 */
-	 4,			
-	 0 /* Pointer to the Adc_ChannelGroup*/
+	 0,			
+	 255 /* Pointer to the Adc_ChannelGroup*/
 	},
 	{
-	 0, /* Numeric ID of the HW Unit. */
+	 7, /* Numeric ID of the HW Unit. */
 	 ADC_MODULE_1,	/*  Numeric Id of the Adc_Module */
 	 ADC_SEQUENCER_3, /* Numberic Id of the Adc_Sequencer */
 	 FALSE, /* True: use Adc_Sequencer false: don't configure */

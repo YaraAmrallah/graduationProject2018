@@ -1,5 +1,28 @@
 #ifndef STD_TYPES_H
 #define STD_TYPES_H
+
+
+ /* Id for the company in the AUTOSAR
+  * Gebro-u-motive's company ID = 0x0076 :) 
+  * Gebro-u-motive is a fictional company owned by
+	* Mohamed Ahmed Gebril: vendor of the module*/
+#define STD_TYPES_VENDOR_ID                                  (0x0076U)
+
+/*
+ * Module Version 1.0.0
+ */
+#define STD_TYPES_SW_MAJOR_VERSION                           (1U)
+#define STD_TYPES_SW_MINOR_VERSION                           (0U)
+#define STD_TYPES_SW_PATCH_VERSION                           (0U)
+
+/*
+ * AUTOSAR Version 4.3.1
+ */
+#define STD_TYPES_AR_RELEASE_MAJOR_VERSION                   (4U)
+#define STD_TYPES_AR_RELEASE_MINOR_VERSION                   (3U)
+#define STD_TYPES_AR_RELEASE_PATCH_VERSION                   (1U)
+
+
 #include "Compiler.h"
 #include "Platform_Types.h"
 
