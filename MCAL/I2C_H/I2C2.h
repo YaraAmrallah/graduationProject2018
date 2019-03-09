@@ -141,7 +141,7 @@ typedef enum
 	MASTER=0x10,
 	SLAVE=0x20
 }Type;
-typedef enum 
+typedef enum
 {
 	SINGLE_OP=0x00000007,
 	BURST_SEND_START=0x00000003,

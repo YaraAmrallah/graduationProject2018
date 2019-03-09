@@ -24,10 +24,11 @@ void I2C_Manager(void)
    //setting the intial states to un intialize
 
     static I2C_States ManagerState = I2C_UN_INIT;
-    static I2C_States OldState     = I2C_UN_INIT;
+
+    static uint8_t o = 1;
     //taking the group struct
     const I2C_ConfigType* ConfigPtr = &I2C_ConfigParam[0];
-    
+    static uint8_t i,k=0;
     switch(ManagerState)
     {
         case I2C_UN_INIT:
@@ -47,13 +48,16 @@ void I2C_Manager(void)
 
         case I2C_IDLE:
         {
+
             if(I2C_Write == 1)
             {
-                ManagerState = I2C_GENERATE_START;
+                 I2C_SlaveADD_send(0,I2C_SlaveAddress,I2C_WRITE);
+                 ManagerState = WRITE_DATA;
             }
-            else if(I2C_Read == 1)
+            else if(I2C_Read == 1 && (I2C_ByteCount>0))
             {
-                ManagerState = I2C_GENERATE_START;
+                 I2C_SlaveADD_send(0,I2C_SlaveAddress,I2C_READ);
+                  ManagerState = READ_DATA;
             }
             else
             {
@@ -62,113 +66,35 @@ void I2C_Manager(void)
         }
         break;
 
-        case I2C_GENERATE_START:
+        case WRITE_DATA:
         {
-            I2C_GenerateStart(0);
-            ManagerState = I2C_START_STATUS;
-        }
-        break;
 
-        case I2C_START_STATUS:
-        {
-           // DriverReturnStatus = I2C_StartStatus(0);
-            DriverReturnStatus = I2C_CHECKSTATUS(0,I2C_Start);
-            if(DriverReturnStatus == I2C_StartOK)
-            {
-                ManagerState = I2C_SEND_SLAVE_ADDRESS;
-            }
-            else
-            {
-
-                ManagerState = I2C_START_STATUS;
-            }
-        }
-        break;
-
-        case I2C_SEND_SLAVE_ADDRESS:
-        {
-            if(I2C_Write == 1)
-            {
-                I2C_SendSlaveAddress(I2C_SlaveAddress,I2C_WRITE,0);
-            }
-            else if(I2C_Read == 1)
-            {
-                I2C_SendSlaveAddress(I2C_SlaveAddress,I2C_READ,0);
-            }
-            else{/*MISRA*/};
-            
-            ManagerState = I2C_SEND_SLAVE_ADDRESS_STATUS;
-        }
-        break;
-
-        case I2C_SEND_SLAVE_ADDRESS_STATUS:
-        {
-         //   DriverReturnStatus = I2C_SendSlaveAddressStatus(0);
-              DriverReturnStatus = I2C_CHECKSTATUS(0,I2C_SendSlaveAdd);
-            if(DriverReturnStatus == I2C_SendSlaveAddressOK)
-            {
-                if(I2C_Write == 1)
-                {
-                    ManagerState =I2C_SEND_DATA;
-                }
-                else if(I2C_Read == 1)
-                {
-                    OldState = I2C_SEND_SLAVE_ADDRESS_STATUS;
-                    ManagerState = I2C_GET_DATA_MANAGER;
-                }
-                else{/*MISRA*/};
-            }
-            else
-            {
-                ManagerState = I2C_SEND_SLAVE_ADDRESS_STATUS;
-            }
-        }
-        break;
-     /*I2C clear bit state here  is used in multiple reads*/
-        case I2C_CLEAR_ADDR_BIT:
-        {
-            I2C_Clear_ADDR(0);
-
-            if(I2C_Write == 1)
-            {
-                ManagerState = I2C_SEND_DATA;
-            }
-            else if(I2C_Read == 1)
-            {
-                OldState = I2C_CLEAR_ADDR_BIT;
-                ManagerState = I2C_GET_DATA_MANAGER;
-            }
-            else{/*MISRA*/};
-
-        }
-		break;
-
-        case I2C_SEND_DATA:
-        {
-             I2C_SendData(I2C_DataPointer, 0);
-            ManagerState = I2C_SEND_DATA_STATUS;
-        }
-        break;
-
-        case I2C_SEND_DATA_STATUS:
-        {
-           // DriverReturnStatus = I2C_PlaceDataStatus(0);
-              DriverReturnStatus = I2C_CHECKSTATUS(0,I2C_SendDATAA);
-
-            if(DriverReturnStatus == I2C_SendDATAOK)
-            {
-                ManagerState = I2C_SEND_DATA_MANAGER;
-            }
-            else
-            {
-                ManagerState = I2C_SEND_DATA_STATUS;
-            }
-        }
-        break;
-
-        case I2C_SEND_DATA_MANAGER:
-        {
             if(I2C_ByteCount == 1)
+            {
+                I2C_WRITE_DATA(0,*(I2C_DataPointer));
+                ManagerState = SINGLE_SEND_START;
+            }
+            else if(I2C_ByteCount > 1)
+            {
+                ManagerState = BURST_SEND;
+
+            }
+            else{/*MISRA*/};
+        }
+        break;
+
+        case SINGLE_SEND_START:
+        {
+           I2C_MasterCTL(0, SINGLE_OP);
+           ManagerState = STATUS_SEND_START;
+        }
+        break;
+
+
+        case STATUS_SEND_START:
+        {
+              DriverReturnStatus = I2C_CHECKSTATUS(0,I2C_SINGLESEND);
+              if(DriverReturnStatus == I2C_SINGLEOK)
             {
                 ManagerState = I2C_IDLE;
                 I2C_Write = 0;
@@ -176,130 +102,247 @@ void I2C_Manager(void)
                 I2C_ByteCount = 0;
                 (*(ConfigPtr->I2C_TransmissionDoneCallBack))();
             }
-            else if(I2C_ByteCount > 1)
+            else
             {
-                I2C_ByteCount--;
-                I2C_DataPointer++;
-                ManagerState = I2C_SEND_DATA;
+                ManagerState = STATUS_SEND_START;
             }
-            else{/*MISRA*/};
+
         }
         break;
 
-        case I2C_GET_DATA_MANAGER:
+        case BURST_SEND:
         {
-            switch(OldState)
-            {
-                case I2C_SEND_SLAVE_ADDRESS_STATUS:
-                {
-					if(I2C_ByteCount == 1)
-                    {
-                        I2C_TurnOffAcknowledge(0);
-                        ManagerState = I2C_CLEAR_ADDR_BIT;
-                    }
-                    else if(I2C_ByteCount > 1)
-                    {
-                       ManagerState = I2C_CLEAR_ADDR_BIT; 
-                    }
-                    else{/*MISRA*/};
-                }
-                break;
+            I2C_WRITE_DATA(0,*(I2C_DataPointer));
+            I2C_MasterCTL(0,BURST_SEND_START); 
+            ManagerState=BURST_SENDSTAT;
 
-                case I2C_CLEAR_ADDR_BIT:
-                {
-					if(I2C_ByteCount == 1)
-                    {
-                        ManagerState = I2C_GET_SINGLE_BYTE_STATUS;
-                    }
-                    else if(I2C_ByteCount > 1)
-                    {
-                        ManagerState = I2C_GET_MULTI_BYTE_STATUS;
-                    }
-                    else{/*MISRA*/};
-                }
-                break;
+        } break;
 
-                case I2C_GET_SINGLE_BYTE:
-                {
-                    ManagerState = I2C_IDLE;
-                    OldState = I2C_UN_INIT;
-                    I2C_Read = 0;
-                    I2C_ByteCount = 0;
-                    I2C_DataPointer = 0;
-					I2C_TurnOnAcknowledge(0);
-                    (*(ConfigPtr->I2C_ReceptionDoneCallBack))();
-                }
-                break;
+        case BURST_SENDSTAT:
+        {
+                  DriverReturnStatus = I2C_CHECKSTATUS(0,I2C_BURSTSEND_STAT);
+                        static uint8_t z=1;
 
-                case I2C_GET_MULTI_BYTES:
+                        if(DriverReturnStatus == I2C_BURSTOK)
+                        {
+
+                            if(i<I2C_ByteCount-1)
+                            {
+                                k=i+1;
+
+                                I2C_WRITE_DATA(0,*(I2C_DataPointer+k));
+
+                            //
+                                switch (z)
+                                {
+                                    case 1:
+                                    {
+                                      if(k == (I2C_ByteCount-1))
+                                        {
+                                           z=3;
+                                        }
+                                        else
+                                        {
+                                            I2C_MasterCTL(0,BURST_SEND_CONT);
+                                            z=2;
+                                        }
+                                    }
+                                     break;
+
+                                    case 2:
+                                    {
+                                     DriverReturnStatus = I2C_CHECKSTATUS(0,I2C_BURSTSEND_STAT);
+                                    if(DriverReturnStatus == I2C_BURSTOK)
+                                    {
+                                        z = 1; i++;
+                                     }
+                                    else
+                                    {
+                                        z = 2;
+                                    }
+                                    } break;
+
+                                    case 3:
+                                    {
+                                        I2C_MasterCTL(0,BURST_DONE);
+                                        z=4;
+
+                                    }
+                                     break;
+
+                                    case 4:
+                                    {
+                                        DriverReturnStatus = I2C_CHECKSTATUS(0,I2C_BURSTSEND_STAT);
+                                        if(DriverReturnStatus == I2C_BURSTOK)
+                                       {
+                                        ManagerState = I2C_IDLE;
+                                        I2C_Write = 0;
+                                        I2C_DataPointer = 0;
+                                        I2C_ByteCount = 0;
+                                        k=0;i=0;z=1;
+                                        (*(ConfigPtr->I2C_TransmissionDoneCallBack))();
+                                        }
+                                        else
+                                        {
+                                            z = 4;
+                                        }
+
+                                    }break;
+                                }
+                            }
+
+                        }
+                       else
+                       {ManagerState = BURST_SENDSTAT;}
+                 }break;
+
+
+     /*I2C clear bit state here  is used in multiple reads*/
+        case READ_DATA:
+        {
+          if(I2C_ByteCount == 1)
+          {
+                 I2C_MasterCTL(0,SINGLE_OP);
+                DriverReturnStatus = I2C_CHECKSTATUS(0,MASTER_BUSY);
+                if(DriverReturnStatus == I2C_SREAD_OK)
                 {
-                    if(I2C_ByteCount == 1)
-                    {
-                        I2C_TurnOffAcknowledge(0);
-                        ManagerState = I2C_GET_SINGLE_BYTE_STATUS;
-                    }
-                    else if(I2C_ByteCount > 1)
-                    {
-                        I2C_ByteCount--;
-                        I2C_DataPointer++;
-						ManagerState = I2C_GET_MULTI_BYTE_STATUS; 
-                    }
+                    ManagerState = SINGLE_READ;
                 }
-                break;
-				
-				default: break;
-            }
+                else
+                {
+                    ManagerState = READ_DATA;
+                }
+          }
+
+          else
+          {
+               I2C_MasterCTL(0,BURST_RECEIVE_START);
+                DriverReturnStatus = I2C_CHECKSTATUS(0,MASTER_BUSY);
+              if(DriverReturnStatus == I2C_SREAD_OK)
+                {
+                    ManagerState = BURST_READ;
+                }
+                else
+                {
+                    ManagerState = READ_DATA;
+                }
+
+
+          }
         }
         break;
 
-        case I2C_GET_SINGLE_BYTE_STATUS:
+        case SINGLE_READ:
         {
-          //  DriverReturnStatus = I2C_GetDataStatus(0);
-               DriverReturnStatus = I2C_CHECKSTATUS(0,I2C_GetDataa);   
-            if(DriverReturnStatus == I2C_GetDataOK)
+
+             I2C_READ_DATA(0,I2C_DataPointer);
+
+             ManagerState = I2C_READ_DATA_STATUS
+			 
+			 ;
+        }
+        break;
+
+
+
+
+
+        case I2C_READ_DATA_STATUS:
+        {
+          
+              DriverReturnStatus = I2C_CHECKSTATUS(0,I2C_BUSBUSY);
+
+            if(DriverReturnStatus == I2C_BUSY)
             {
-                ManagerState = I2C_GET_SINGLE_BYTE;
+                ManagerState = I2C_READ_DATA_STATUS;
             }
             else
             {
-                ManagerState = I2C_GET_SINGLE_BYTE_STATUS;
+                (*(ConfigPtr->I2C_ReceptionDoneCallBack))();
+                ManagerState = I2C_IDLE;
             }
         }
         break;
 
-        case I2C_GET_SINGLE_BYTE:
-        {
-            I2C_GetData(I2C_DataPointer, 0);
-            ManagerState = I2C_GET_DATA_MANAGER;
-            OldState = I2C_GET_SINGLE_BYTE;
-        }
-        break;
 
-        case I2C_GET_MULTI_BYTE_STATUS:
+
+        case BURST_READ:
+
         {
-            //DriverReturnStatus = I2C_GetDataStatus(0);
-            DriverReturnStatus =I2C_CHECKSTATUS(0,I2C_GetDataa); 
-            if(DriverReturnStatus == I2C_GetDataOK)
+              I2C_READ_DATA(0,I2C_DataPointer);
+              ManagerState = I2C_BURST_READSTAT;
+
+         } break;
+
+
+
+        case I2C_BURST_READSTAT:
+        {
+            switch(o)
             {
-                ManagerState = I2C_GET_MULTI_BYTES;
-            }
-            else
-            {
-                ManagerState = I2C_GET_MULTI_BYTE_STATUS;
-            }
-        }
-        break;
+                case 1:
+                {
+                    if(I2C_ByteCount > 1)
+                    {
+                         I2C_MasterCTL(0,BURST_RECEIVE_CONT);
+                         DriverReturnStatus = I2C_CHECKSTATUS(0,MASTER_BUSY);
 
-        case I2C_GET_MULTI_BYTES:
-        {
-            I2C_GetData(I2C_DataPointer, 0);
-            ManagerState = I2C_GET_DATA_MANAGER;
-            OldState = I2C_GET_MULTI_BYTES;
-        }
-        break;
+                        if(DriverReturnStatus == I2C_SREAD_OK)
+                        {
+                            ManagerState = I2C_BURST_READSTAT;
+                            I2C_ByteCount--;
+                            I2C_DataPointer++;
+                            I2C_READ_DATA(0,I2C_DataPointer);
+                            o=1;
+                        }
+               
+                    }
+                    else if(I2C_ByteCount == 1)
+                    {
+                        I2C_MasterCTL(0,BURST_DONE); /* -Data-NACK-P */
+                        o=2;
+                    }
+
+                }break;
+
+                case 2:
+                {
+                   DriverReturnStatus = I2C_CHECKSTATUS(0,I2C_MBUSY);
+
+                    if(DriverReturnStatus == I2C_MASTERBUSY)
+                    {
+                        o=2;
+
+                        }
+                    else
+                    {
+                        I2C_READ_DATA(0,I2C_DataPointer);
+                        o=3;
+                    }
+               } break;
+
+               case 3:
+               {
+                       DriverReturnStatus = I2C_CHECKSTATUS(0,I2C_BUSBUSY);
+                        if(DriverReturnStatus == I2C_BUSBUSY)
+                        {
+                            o=3;
+                        }
+                        else{
+                        ManagerState = I2C_IDLE;
+                        I2C_Read = 0;
+                        I2C_DataPointer = 0;
+                        I2C_ByteCount = 0;
+                        (*(ConfigPtr->I2C_ReceptionDoneCallBack))();
+                        }
+               }break;
+                default: break;
+            }
+        }break;
     }
-}
+ }
 
-
+       
+    
 
 
