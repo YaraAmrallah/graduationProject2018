@@ -5,10 +5,63 @@
 #ifndef ADC_H
 #define ADC_H
 
+
+/* Id for the company in the AUTOSAR
+  * Gebro-u-motive's company ID = 0x0076 :) 
+  * Gebro-u-motive is a fictional company owned by
+	* Mohamed Ahmed Gebril: vendor of the module*/
+#define ADC_VENDOR_ID    (0x0076)
+
+/* ADC Module Id */
+#define ADC_MODULE_ID    (123U)
+
+/* ADC Instance Id */
+#define ADC_INSTANCE_ID  (0U)
+
+/*
+ * Module Version 1.0.0
+ */
+#define ADC_SW_MAJOR_VERSION           (1U)
+#define ADC_SW_MINOR_VERSION           (0U)
+#define ADC_SW_PATCH_VERSION           (0U)
+
+/*
+ * AUTOSAR Version 4.3.1
+ */
+#define ADC_AR_RELEASE_MAJOR_VERSION   (4U)
+#define ADC_AR_RELEASE_MINOR_VERSION   (3U)
+#define ADC_AR_RELEASE_PATCH_VERSION   (1U)
+
+
 #include "../Std_Types/Std_Types.h"
-#include "M4MemMap.h"  /* clocks and prioity */
+/* AUTOSAR checking between Std Types and ADC Modules */
+#if ((STD_TYPES_AR_RELEASE_MAJOR_VERSION != ADC_AR_RELEASE_MAJOR_VERSION)\
+ ||  (STD_TYPES_AR_RELEASE_MINOR_VERSION != ADC_AR_RELEASE_MINOR_VERSION)\
+ ||  (STD_TYPES_AR_RELEASE_PATCH_VERSION != ADC_AR_RELEASE_PATCH_VERSION))
+  #error "The AR version of Std_Types.h does not match the expected version"
+#endif
+  
 #include "Adc_TypeDefs.h"
+
+
+/* AUTOSAR checking between Adc_TypeDef and ADC Modules */
+#if ((ADC_AR_RELEASE_MAJOR_VERSION != ADC_TYPE_DEFS_AR_RELEASE_MAJOR_VERSION)\
+ ||  (ADC_AR_RELEASE_MINOR_VERSION != ADC_TYPE_DEFS_AR_RELEASE_MINOR_VERSION)\
+ ||  (ADC_AR_RELEASE_PATCH_VERSION != ADC_TYPE_DEFS_AR_RELEASE_PATCH_VERSION))
+  #error "The AR version of Adc_Typedefs.h does not match the expected version"
+#endif
+
+/*  pre compile Configuration files */
 #include "Adc_Cfg.h"
+/* AUTOSAR checking between Adc_Cfg and ADC Modules */
+#if ((ADC_AR_RELEASE_MAJOR_VERSION != ADC_CFG_AR_RELEASE_MAJOR_VERSION)\
+ ||  (ADC_AR_RELEASE_MINOR_VERSION != ADC_CFG_AR_RELEASE_MINOR_VERSION)\
+ ||  (ADC_AR_RELEASE_PATCH_VERSION != ADC_CFG_AR_RELEASE_PATCH_VERSION))
+  #error "The AR version of Adc_Cfg.h does not match the expected version"
+#endif
+
+/* clocks and prioity Not an autosar file for the whole controller TM4C123GH6PM */
+#include "M4MemMap.h"
 
 /* API Ids from ADC_SWS document */
 #define ADC_INIT_SID													0x00
@@ -68,20 +121,19 @@ Std_ReturnType Adc_SetupResultBuffer(
 	This Api is not supported for now.*/
 void Adc_DeInit(void);
 
-#if(ADC_ENABLE_START_STOP_GROUP_API==STD_ON)
 /* Starts the conversion of all channels of the requested ADC Channel group. */
+#if(ADC_ENABLE_START_STOP_GROUP_API==STD_ON)
 void Adc_StartGroupConversion(Adc_GroupType Group);
-
 
 /* Stops the conversion of the requested ADC Channel group.
 	This Api is not supported for now. */
 void Adc_StopGroupConversion(void);
 #endif
 
-#if(ADC_READ_GROUP_API==STD_ON)
 /*Reads the group conversion result of the last completed conversion round of the requested group 
 and stores the channel values starting at the DataBufferPtr address. 
 The group channel values are stored in ascending channel number order*/
+#if(ADC_READ_GROUP_API==STD_ON)
 Std_ReturnType Adc_ReadGroup(
 								Adc_GroupType Group,
 								Adc_ValueGroupType* DataBufferPtr

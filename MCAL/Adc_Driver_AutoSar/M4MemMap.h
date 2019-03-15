@@ -3,6 +3,12 @@
 
 #include <stdint.h>
 typedef volatile uint32_t * const M4_PrefRegType;
+
+
+/* Function to enable Golbal interrupt */
+void EnableInterrupt(void);
+void DisableInterrupt(void);
+
 #define M4_PREF_BASE_ADD 0xE000E000
 
 /*System Timer (SysTick) Registers*/

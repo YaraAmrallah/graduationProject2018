@@ -1,7 +1,30 @@
 #ifndef ADC_TYPEDEFS_H
 #define ADC_TYPEDEFS_H
 
+/*
+ * Module Version 1.0.0
+ */
+#define ADC_TYPE_DEFS_SW_MAJOR_VERSION           (1U)
+#define ADC_TYPE_DEFS_SW_MINOR_VERSION           (0U)
+#define ADC_TYPE_DEFS_SW_PATCH_VERSION           (0U)
+
+/*
+ * AUTOSAR Version 4.3.1
+ */
+#define ADC_TYPE_DEFS_AR_RELEASE_MAJOR_VERSION   (4U)
+#define ADC_TYPE_DEFS_AR_RELEASE_MINOR_VERSION   (3U)
+#define ADC_TYPE_DEFS_AR_RELEASE_PATCH_VERSION   (1U)
+
+
 #include "../Std_Types/Std_Types.h"
+/* AUTOSAR checking between Std Types and ADC typedefs Module */
+
+#if ((STD_TYPES_AR_RELEASE_MAJOR_VERSION != ADC_TYPE_DEFS_AR_RELEASE_MAJOR_VERSION)\
+ ||  (STD_TYPES_AR_RELEASE_MINOR_VERSION != ADC_TYPE_DEFS_AR_RELEASE_MINOR_VERSION)\
+ ||  (STD_TYPES_AR_RELEASE_PATCH_VERSION != ADC_TYPE_DEFS_AR_RELEASE_PATCH_VERSION))
+  #error "The AR version of Std_Types.h does not match the expected version"
+#endif
+
 #define ADC_MAXIMUM_CHANNELS_PER_GROUP (8u)
 
 /* Numeric ID of an ADC channel. */ 

@@ -2,7 +2,7 @@
  * SERVO.c
  *
  *  Created on: Jan 29, 2019
- *      Author: Ayman-Pc
+ *      Author: Ayman
  */
 
 #include "SERVO.h"
@@ -30,9 +30,9 @@ PWM_CheckType Initiate_Servo (uint8_t PWM_ID )
 PWM_CheckType AngleUp_Servo(uint8_t PWM_ID,uint8_t Pre_angle , uint8_t * Upcom_angle)
 {
 	 PWM_CheckType RetVar = PWM_NOK;
-	 float duty= ((2.5)+ ((10*(Pre_angle+3))/180.0));
+	 float duty= ((2.5)+ ((10*(Pre_angle+ANGLE_SHIFT))/180.0));
 	 RetVar=  PWM_GenerateLASquareWave ( PWM_ID, 50, duty );
-	 * Upcom_angle= (Pre_angle+3);
+	 * Upcom_angle= (Pre_angle+ANGLE_SHIFT);
 
 
 	 return RetVar;
@@ -43,10 +43,15 @@ PWM_CheckType AngleUp_Servo(uint8_t PWM_ID,uint8_t Pre_angle , uint8_t * Upcom_a
 PWM_CheckType AngleDown_Servo(uint8_t PWM_ID,uint8_t Pre_angle , uint8_t * Upcom_angle)
 {
 	PWM_CheckType RetVar = PWM_NOK;
-		 float duty= ((2.5)+ ((10*(Pre_angle-3))/180.0));
+		 float duty= ((2.5)+ ((10*(Pre_angle-ANGLE_SHIFT))/180.0));
 		 RetVar=  PWM_GenerateLASquareWave ( PWM_ID, 50, duty );
-		 * Upcom_angle= (Pre_angle-3);
+		 * Upcom_angle= (Pre_angle-ANGLE_SHIFT);
 
 
 		 return RetVar;
 }
+
+
+
+
+

@@ -17,21 +17,19 @@ typedef enum
 
 typedef enum
 {
-    I2C_UN_INIT                     = 0 ,
-    I2C_IDLE                        = 1 ,
-    I2C_GENERATE_START              = 2 ,
-    I2C_START_STATUS                = 3 ,
-    I2C_SEND_SLAVE_ADDRESS          = 4 ,
-    I2C_CLEAR_ADDR_BIT              = 5 ,
-    I2C_SEND_SLAVE_ADDRESS_STATUS   = 6 ,
-    I2C_SEND_DATA                   = 7 ,
-    I2C_SEND_DATA_STATUS            = 8 ,
-    I2C_SEND_DATA_MANAGER           = 9 ,
-    I2C_GET_DATA_MANAGER            = 10,
-    I2C_GET_SINGLE_BYTE_STATUS      = 11,
-    I2C_GET_SINGLE_BYTE             = 12,
-    I2C_GET_MULTI_BYTE_STATUS       = 13,
-    I2C_GET_MULTI_BYTES             = 14
+    I2C_UN_INIT                   = 0 ,
+    I2C_IDLE                      = 1 ,
+    WRITE_DATA                    = 2 ,
+    SINGLE_SEND_START             = 3 ,
+    STATUS_SEND_START             = 4 ,
+    BURST_SEND                    = 5 ,
+    BURST_SENDSTAT                =6,
+    READ_DATA                     = 7 ,
+    SINGLE_READ                   = 8 ,
+    I2C_READ_DATA_STATUS          = 9 ,
+    BURST_READ                    = 10 ,
+    I2C_BURST_READSTAT            = 11
+
 }I2C_States;
 
 
