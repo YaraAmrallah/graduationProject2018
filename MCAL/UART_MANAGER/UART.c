@@ -3,6 +3,7 @@
 #include "M4MemMap.h"
 #include <stdint.h>
 
+
 typedef volatile uint32_t* const UART_ADDR_CASTING;
 #define UART_NUMBER 8
 #define SysClck 16000000
@@ -52,22 +53,6 @@ UART_CallBackPtr_t RxCallBck[USED_UART_MODULES];
 
 
 
-/*****************************UART STATES*********************************/
-#define UARTState_uninit        0x00
-#define UARTState_init          0x01
-#define UARTState_Transmitting  0x02
-#define UARTState_Receiving     0x03
-/*************************************************************************/
-
-/********
- * Helper Functions
- *              **************/
- static void TxManage(uint8_t UART_ID);
- static void RxManage(uint8_t UART_ID);
- static void IntManage(UARTNumber UARTX);
- /*************************/
-
-
 
 #define UART_ADDRESS(BASE,OFFSET) (UARTBaseAddLuT[BASE] + OFFSET)
 
@@ -97,9 +82,21 @@ UART_CallBackPtr_t RxCallBck[USED_UART_MODULES];
 #define UART9BITAMASK_REG(UART_ID) *((UART_ADDR_CASTING)UART_ADDRESS(UART_ID,0x0A8))
 #define UARTPP_REG(UART_ID)        *((UART_ADDR_CASTING)UART_ADDRESS(UART_ID,0xFC0))
 #define UARTCC_REG(UART_ID)        *((UART_ADDR_CASTING)UART_ADDRESS(UART_ID,0xFC8))
+//testing
+void BlinkLed(uint8_t period,uint8_t groupId);
+
+/*****************************UART STATES*********************************/
+#define UARTState_uninit        0x00
+#define UARTState_init          0x01
+#define UARTState_Transmitting  0x02
+#define UARTState_Receiving     0x03
+/*************************************************************************/
+
+/**********************************CONSTANTS******************************/
+#define UART1_DMA_GROUP     0
 
 
-/************************************OFFSETS**************************************************/
+/************************************OFFSETS******************************/
 #define UARTEN_OFFSET       0
 #define EOT_OFFSET          4
 #define HSE_OFFSET          5
@@ -121,6 +118,18 @@ UART_CallBackPtr_t RxCallBck[USED_UART_MODULES];
 #define TXMSASKEDINT_OFFSET 5
 #define RXMSASKEDINT_OFFSET 4
 
+
+//Identifies the DMA group that corresponds to the uart module
+uint8_t UART_DMAGroupIdentifierLuT[USED_UART_MODULES] =
+{0,UART1_DMA_GROUP};
+
+/********
+ * Helper Functions
+ *              **************/
+ static void TxManage(uint8_t UART_ID);
+ static void RxManage(uint8_t UART_ID);
+ static void IntManage(UARTNumber UART_ID);
+ /*************************/
 
 
 UART_RetType UART_Init(void)
@@ -155,12 +164,14 @@ for(itrator = 0;(itrator < USED_UART_MODULES && ErrorFlag != 1);itrator++)
     UARTIFLS_REG(CfgPtr->UART_ID) |= (CfgPtr->FIFO_Level_RX << FIFORXLS_OFFSET);     //fifo rx
     UARTCC_REG(CfgPtr->UART_ID) = (CfgPtr->ClockCfg);                   //configuring clock
 
-    UARTMIS_REG(CfgPtr->UART_ID) |= (CfgPtr->UARTIM);             // interrupt mask.
+    UARTIM_REG(CfgPtr->UART_ID) |= (CfgPtr->RxInt);             //  Receiver interrupt .
+    UARTIM_REG(CfgPtr->UART_ID) |= (CfgPtr->TxInt);             //  Transmitter interrupt .
+
     UART9BITADDR_REG(CfgPtr->UART_ID) |= (CfgPtr->UART9BITADDR);   // 9 BIT mode (ENABLE/DISABLE)
     UART9BITAMASK_REG(CfgPtr->UART_ID)|= (CfgPtr->UART9BITAMASK);  // 9 BIT MASK
-    UARTDMACTL_REG(CfgPtr->UART_ID)   |= (CfgPtr->DMAEN);     // DMA CONTROL
+    UARTDMACTL_REG(CfgPtr->UART_ID)   |= (CfgPtr->DMAEN);            // DMA CONTROL
     UARTILPR_REG(CfgPtr->UART_ID)     |= (CfgPtr->UARTILPR);       // LOW POWER MODE
-    UARTCTL_REG(CfgPtr->UART_ID) |= (1<<UARTEN_OFFSET);                     // enable UART.
+    UARTCTL_REG(CfgPtr->UART_ID) |= (1 << UARTEN_OFFSET);                     // enable UART.
 
     UARTDriverStates[CfgPtr->UART_ID] = UARTState_init;         //Switch to initialized state
 
@@ -182,7 +193,7 @@ return RetVar;
 
 
 
-UART_RetType UART_StartTransmission(uint8_t* Tx_text,uint32_t TxLength,uint8_t UART_ID)
+UART_RetType UART_StartTransmission(uint8_t UART_ID,uint8_t* Tx_text,uint32_t TxLength)
 {
     UART_RetType RetVar;
     const UART_Cfg_Type * CfgPtr;
@@ -205,6 +216,7 @@ UART_RetType UART_StartTransmission(uint8_t* Tx_text,uint32_t TxLength,uint8_t U
            UARTTxCount[CfgPtr->UART_ID] = 0;
            //Transmit the first byte
            UARTSEND(Tx_text[0],UART_ID);
+
            RetVar = UART_OK;
 
         }
@@ -287,13 +299,15 @@ UART_RetType UART_StartReceiving(uint8_t UART_ID, uint8_t* Rx_Text, uint32_t RxL
     UART_RetType RetVar;
          const UART_Cfg_Type * CfgPtr;
          //check channel ID
-         if(UART_ID < USED_UART_MODULES){
+         if(UART_ID < USED_UART_MODULES)
+         {
 
              //assign the address of the corresponding channel ID
-                CfgPtr = &UART_CfgParam[UART_ID];
+               CfgPtr = &UART_CfgParam[UART_ID];
 
              //check if uart is initialized
-             if(UARTDriverStates[CfgPtr->UART_ID] == UARTState_init){
+             if(UARTDriverStates[CfgPtr->UART_ID] == UARTState_init)
+             {
 
                  //enable the receiver
                  UARTCTL_REG(UART_ID) = (1<<RXEN_OFFSET);
@@ -309,6 +323,10 @@ UART_RetType UART_StartReceiving(uint8_t UART_ID, uint8_t* Rx_Text, uint32_t RxL
 
                  //change UART state to receiving
                  UARTDriverStates[CfgPtr->UART_ID] = UARTState_Receiving;
+
+                 //Receive the first byte
+                 *(UARTRxBuffPtr[CfgPtr->UART_ID] + UARTRxCount[CfgPtr->UART_ID]) = UARTRECEIVE(UART_ID);
+
                  RetVar = UART_OK;
              }
              else{
@@ -360,28 +378,29 @@ UART_RetType UART_StopCurrentReception(uint8_t UART_ID)
 UART_RetType UART_GetNumofRxBytes(uint8_t UART_ID, uint32_t *NumPtr)
 {
     UART_RetType RetVar;
-       const UART_Cfg_Type * CfgPtr;
-       //check channel ID
-       if(UART_ID < USED_UART_MODULES)
-       {
-           //assign the address of the corresponding channel ID
-           CfgPtr = &UART_CfgParam[UART_ID];
-           //CHECK  the state of the UART channel
-           if(UARTDriverStates[CfgPtr->UART_ID] == UARTState_Transmitting)
-           {
-               *NumPtr = UARTRxCount[CfgPtr -> UART_ID];
-               RetVar = UART_OK;
-           }
-           else
-               {
-               RetVar = UART_NOK;
-               }
+    const UART_Cfg_Type * CfgPtr;
+    //check channel ID
+    if (UART_ID < USED_UART_MODULES)
+    {
+        //assign the address of the corresponding channel ID
+        CfgPtr = &UART_CfgParam[UART_ID];
+        //CHECK  the state of the UART channel
+        if (UARTDriverStates[CfgPtr->UART_ID] == UARTState_Receiving)
+        {
+            *NumPtr = UARTRxCount[CfgPtr->UART_ID];
+            RetVar = UART_OK;
         }
-               else{
-               RetVar = UART_NOK;
-               }
+        else
+        {
+            RetVar = UART_NOK;
+        }
+    }
+    else
+    {
+        RetVar = UART_NOK;
+    }
 
-       return RetVar;
+    return RetVar;
 }
 
 /**Transmission and reception handling**/
@@ -389,17 +408,27 @@ UART_RetType UART_GetNumofRxBytes(uint8_t UART_ID, uint32_t *NumPtr)
 UART_RetType UART_ManageOngoingOperations(uint8_t UART_ID)
 {
     UART_RetType RetVar;
-    if(UART_ID < USED_UART_MODULES)
-    {
-        if((UART_CfgParam[UART_ID].DMAEN == Enabled_RX) || (UART_CfgParam[UART_ID].DMAEN == Enabled_TX))
-        {
 
+    if (UART_ID < USED_UART_MODULES)
+    {
+        if (((UART_CfgParam[UART_ID].DMAEN == Enabled_RX)
+                || (UART_CfgParam[UART_ID].DMAEN == Enabled_TX)))
+        {
+            if (DMA_Done_Flag == 1)
+            {
+                BlinkLed(50, 3);
+                //call clear req flag
+                DMA_Done_Flag = 0;
+                //pass the data to be parsed
+
+            }
         }
         else
         {
-        TxManage(UART_ID);
-        RxManage(UART_ID);
-        RetVar = UART_OK;
+            TxManage(UART_ID);
+            RxManage(UART_ID);
+
+            RetVar = UART_OK;
         }
     }
     else
@@ -408,8 +437,6 @@ UART_RetType UART_ManageOngoingOperations(uint8_t UART_ID)
     }
     return RetVar;
 }
-
-
 
 /****A function is used to completely receive data
  * increment the counter one by one till cout = length ******/
@@ -422,16 +449,19 @@ static void RxManage(uint8_t UART_ID)
       if(UARTDriverStates[CfgPtr->UART_ID] == UARTState_Receiving)
       {
           //check if it is done or not
-          if(UARTRxCount[CfgPtr->UART_ID] <UARTRxLength[CfgPtr->UART_ID])
+          if(UARTRxCount[CfgPtr->UART_ID] <= UARTRxLength[CfgPtr->UART_ID])
           {
               //if the receiver is empty
-              if((UARTFR_REG(UART_ID) & (1<<RXFIFOEMPTY_OFFSET)) == (1<<RXFIFOEMPTY_OFFSET))
+              if((UARTFR_REG(UART_ID) & (1 << RXFIFOFULL_OFFSET)) == 0)
               {
-                  //Receive the byte in the buffer
-                  *(UARTRxBuffPtr[CfgPtr->UART_ID] + UARTRxCount[CfgPtr->UART_ID]) = UARTRECEIVE(UART_ID);
                   //increment the counter
                   UARTRxCount[CfgPtr->UART_ID] ++;
-                  //clear the flag.
+
+                  //Receive the byte in the buffer
+                  *(UARTRxBuffPtr[CfgPtr->UART_ID] + UARTRxCount[CfgPtr->UART_ID]) = UARTRECEIVE(UART_ID);
+
+                  //clear the FLAGS.
+                 // UARTRSR_REG(CfgPtr->UART_ID) |= 0xff;
               }
               else{}
           }
@@ -461,7 +491,7 @@ static void TxManage(uint8_t UART_ID)
       if(UARTDriverStates[CfgPtr->UART_ID] == UARTState_Transmitting)
       {
           //check if the tx register is empty and ready to assign new data
-          if(((UARTFR_REG(UART_ID) & (1<<TXFIFOEMPTY_OFFSET)) == (1<<TXFIFOEMPTY_OFFSET)))
+          if(((UARTFR_REG(UART_ID) & (1<<TXFIFOFULL_OFFSET)) == 0))
           {
               //increment the count to send the next character
               UARTTxCount[CfgPtr->UART_ID]++;
@@ -488,76 +518,85 @@ static void TxManage(uint8_t UART_ID)
       else{}
 }
 
+
+
 /****A function to handle TX and RX interrupts******/
-static void IntManage(UARTNumber UARTX)
+static void IntManage(UARTNumber UART_ID)
 {
-    //check if the uartx is initialized
-    if(UARTX <= USED_UART_MODULES)
+
+    //check if the UART_ID is valid
+    if(UART_ID <= USED_UART_MODULES)
     {
+     //cHecK if DMA GENERATED a completion interrupt
+        if((UART_CfgParam[UART_ID].DMAEN == Enabled_TX) || (UART_CfgParam[UART_ID].DMAEN == Enabled_RX))
+        {
+            //callback function to set the global flag.
+            DoneCallBck[(DMA_Cfg[UART_DMAGroupIdentifierLuT[UART_ID]].DMA_ID)]();
+
+            //clear interrupt flag
+            UARTICR_REG(UART_ID) |= (1 << RXMSASKEDINT_OFFSET);
+        }
+
     //CHECK THE STATE OF THE UART
     //in case of transmission
-        if(UARTDriverStates[UARTX] == UARTState_Transmitting)
+        else if(UARTDriverStates[UART_ID] == UARTState_Transmitting)
         {
             //check if the tx register is empty and ready to assign new data
-                   if(!((UARTFR_REG(UARTX) & (1<<TXFIFOEMPTY_OFFSET)) == (1<<TXFIFOEMPTY_OFFSET)))
+                   if(!((UARTFR_REG(UART_ID) & (1<<TXFIFOEMPTY_OFFSET)) == (1<<TXFIFOEMPTY_OFFSET)))
                    {
                        //INCREMENT THE counter to send new byte
-                       UARTTxCount[UARTX]++;
+                       UARTTxCount[UART_ID]++;
                        //Check if transmission is done or not
-                       if(UARTTxCount[UARTX] <= UARTTxLength[UARTX])
+                       if(UARTTxCount[UART_ID] <= UARTTxLength[UART_ID])
                        {
                            //Send the next character
-                           UARTSEND(*(UARTTxBuffPtr[UARTX] + UARTTxCount[UARTX]),UARTX);
+                           UARTSEND(*(UARTTxBuffPtr[UART_ID] + UARTTxCount[UART_ID]),UART_ID);
                        }
                        else
                        {
                            //clear RIS and MIS for the transmitter of the corresponding uart
-                           UARTICR_REG(UARTX) = (1<<TXCLEARINT_OFFSET);
+                           UARTICR_REG(UART_ID) = (1<<TXCLEARINT_OFFSET);
                            //disable interrupt for the corresponding UART module transmitter.
-                           UARTMIS_REG(UARTX) = ~(1<<TXMSASKEDINT_OFFSET);
+                           UARTIM_REG(UART_ID) = ~(1<<TXMSASKEDINT_OFFSET);
                            //disable transmitter
-                           UARTCTL_REG(UARTX) = ~(1<<TXEN_OFFSET);
+                           UARTCTL_REG(UART_ID) = ~(1<<TXEN_OFFSET);
                            //change the state of UART to uninitialized
-                           UARTDriverStates[UARTX] = UARTState_uninit;
+                           UARTDriverStates[UART_ID] = UARTState_uninit;
                            //execute call back function to indicate the end of transmission
-                           TxCallBck[UARTX]();
+                           TxCallBck[UART_ID]();
                            //clear a flag.
-
-
                        }
                    }
 
         }
-
-
         //in case of receiving
-        if(UARTDriverStates[UARTX] == UARTState_Receiving)
+        else if(UARTDriverStates[UART_ID] == UARTState_Receiving)
         {
             // check if all data is receved or not
-            if(UARTRxCount[UARTX] <= UARTRxLength[UARTX])
+            if(UARTRxCount[UART_ID] <= UARTRxLength[UART_ID])
             {
                          //if the receiver is empty
-                         if((UARTFR_REG(UARTX) & (1<<RXFIFOEMPTY_OFFSET)) == (1<<RXFIFOEMPTY_OFFSET))
+                         if((UARTFR_REG(UART_ID) & (1<<RXFIFOEMPTY_OFFSET)) == (1<<RXFIFOEMPTY_OFFSET))
                          {
                              //Receive the byte in the buffer
-                             *(UARTRxBuffPtr[UARTX] + UARTRxCount[UARTX]) = UARTRECEIVE(UARTX);
+                             *(UARTRxBuffPtr[UART_ID] + UARTRxCount[UART_ID]) = UARTRECEIVE(UART_ID);
                              //increment the counter
-                             UARTRxCount[UARTX] ++;
+                             UARTRxCount[UART_ID] ++;
                              //clear a flag
                          }
             }
             else
             {
                 //clear RIS and MIS for the receiver of the corresponding uart
-                UARTICR_REG(UARTX) = (1<<RXCLEARINT_OFFSET);
+                UARTICR_REG(UART_ID) = (1<<RXCLEARINT_OFFSET);
                 //disable interrupt for the corresponding UART module receiver.
-                UARTMIS_REG(UARTX) = ~(1<<RXCLEARINT_OFFSET);
+                UARTIM_REG(UART_ID) = ~(1<<RXCLEARINT_OFFSET);
                 //disable receiver
-                UARTCTL_REG(UARTX) = ~(1<<RXEN_OFFSET);
+                UARTCTL_REG(UART_ID) = ~(1<<RXEN_OFFSET);
                 //change the state of UART to uninitialized
-                UARTDriverStates[UARTX] = UARTState_uninit;
+                UARTDriverStates[UART_ID] = UARTState_uninit;
                 //execute call back function to indicate the end of transmission
-                RxCallBck[UARTX]();
+                RxCallBck[UART_ID]();
                 //clear a flag.
             }
          }
