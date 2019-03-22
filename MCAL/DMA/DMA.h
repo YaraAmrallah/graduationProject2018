@@ -58,7 +58,7 @@ extern const CTRLWordParameters CTRLWord[NumOfUsedChannels];
 extern TargetDMA Target;
 
 DMA_RetType DMA_Init(void);
-DMA_RetType DMA_StartChannel(uint32_t SRC,uint32_t DES,uint16_t TransferSize);
+DMA_RetType DMA_StartChannel(uint8_t DMAGroupID,uint32_t SRC, uint32_t DES, uint16_t TransferSize);
 DMA_RetType DMA_StopChannel(uint8_t ChannelID);
 
 

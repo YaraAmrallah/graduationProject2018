@@ -8,7 +8,6 @@ const Channel_Attributes DMA_Cfg[NumOfUsedChannels] = {
         { 0, 8, 0, 0, 0, 1, DMA_Done}
 };
 
-const CTRLWordParameters CTRLWord[NumOfUsedChannels] = {{eightBit, eightBit_D, No_increment, T1024, Basic}};
+const CTRLWordParameters CTRLWord[NumOfUsedChannels] = {eightBit, eightBit_D, No_increment, T1024, Basic};
 
 TargetDMA Target = Peripheral_to_Memory;
-

@@ -102,20 +102,22 @@ uint8_t SWReqGenerated = 0;
 
 
 //Before the DMA is initialized, It must be enabled on the peripheral side.
+//Initializes the DMA modules spcified in the configurations
 DMA_RetType DMA_Init(void){
-    uint8_t i=0;
 
+    uint8_t itrator = 0;
     DMA_RetType RetVar;
     const Channel_Attributes* Cfg_Ptr;
     const CTRLWordParameters* CTRL_Ptr;
+
     RCGCDMA_REG     |= (1 << 0); //enable DMA clock Gating control
     DMACFG          |= (1 << 0); // enable DMA controller
     DMACTLBASE      =  ((uint32_t)CHNControlTable);   //1024 byte aligned address.
                                                  //This specifies the location of the control table in the system memory.
-    for(i=0;i<NumOfUsedChannels;i++)
+    for(itrator=0;itrator<NumOfUsedChannels;itrator++)
     {
-    Cfg_Ptr = &DMA_Cfg[i];
-    CTRL_Ptr= &CTRLWord[i];
+    Cfg_Ptr = &DMA_Cfg[itrator];
+    CTRL_Ptr= &CTRLWord[itrator];
 
     //prepare the  ctrl word register structure according to configurations (without Transfer Size)
             CTRL_Words[Cfg_Ptr->DMA_ID] |=    (uint32_t)(CTRL_Ptr->DSTINC       << DSTINC_OFFSET)    |
@@ -142,6 +144,9 @@ DMA_RetType DMA_Init(void){
               DMAREQMASKCLR |= (1 << Cfg_Ptr->ChannelNo);     //Enable \ Disable requests
               DMAREQMASKSET |= ((Cfg_Ptr -> EnableDMARequests) << (Cfg_Ptr->ChannelNo));
 
+              //Store the CallBack Pointers in their place in the array
+              DoneCallBck[itrator] = (Cfg_Ptr->DMADonePtr);
+
               //Channel assignment
               //channel assignment is divided into 4 groups
               //each register CHANNEL MAP holds 8 channels each has 4 bit field
@@ -166,48 +171,39 @@ DMA_RetType DMA_Init(void){
               {
                   RetVar = DMA_NOK;
               }
-
-
-              //Enable DMA channel
-              DMAENASET |= (1 << (Cfg_Ptr->ChannelNo));
-
-              //Write 0 in DMA Clear channel
-              DMAENACLR &= ~(1 << (Cfg_Ptr->ChannelNo));
-
-              //Store the CallBack Pointers in their place in the array
-              DoneCallBck[i] = (Cfg_Ptr->DMADonePtr);
-
-              RetVar = DMA_OK;
-      }
-
-    }
+        }
+        else
+        {
+            RetVar = DMA_NOK;
+        }
+    }//end of the loop
 return RetVar;
 }
 
 
-DMA_RetType DMA_StartChannel(uint32_t SRC,uint32_t DES,uint16_t TransferSize)
+//This function enables the specified channel (related to the peripheral)
+//by assigning the Configurations in the control table located in the memory.
+DMA_RetType DMA_StartChannel(uint8_t DMAGroupID,uint32_t SRC, uint32_t DES, uint16_t TransferSize)
 {
     DMA_RetType RetVar;
+    const Channel_Attributes* Cfg_Ptr;
+    Cfg_Ptr = &DMA_Cfg[DMAGroupID];
     //Check if the Transfer Size is a valid number
     if(TransferSize <= MAX_ARBITRATION_SIZE)
     {
-        const Channel_Attributes* Cfg_Ptr;
-
-        Cfg_Ptr = &DMA_Cfg[0];
-
         //Disable DMA Channel
         DMAENACLR |=  (1 << (Cfg_Ptr->ChannelNo));
 
-        ((DMA_ADDRESSES*)DMACTLBASE)[8].SRCENDP = (uint32_t)SRC;
-        ((DMA_ADDRESSES*)DMACTLBASE)[8].DESENDP = (uint32_t)DES;
-
+        // Assigning Source, Destination & control word to the specfied memory location
+        // Based on their channel number
+        ((DMA_ADDRESSES*)DMACTLBASE)[USED_DMA_CHANNEL].SRCENDP = (uint32_t)SRC;
+        ((DMA_ADDRESSES*)DMACTLBASE)[USED_DMA_CHANNEL].DESENDP = (uint32_t)DES;
+        //assigning transfer size to the CTRL Word
         CTRL_Words[Cfg_Ptr->DMA_ID] |= ((TransferSize - TRANSFER_SIZE_DEC) <<  TRANSFER_SIZE_OFFSET);
-        ((DMA_ADDRESSES*)DMACTLBASE)[8].CHCTLP |= CTRL_Words[Cfg_Ptr->DMA_ID];
+        ((DMA_ADDRESSES*)DMACTLBASE)[USED_DMA_CHANNEL].CHCTLP |= CTRL_Words[Cfg_Ptr->DMA_ID];
 
         //Enable DMA channel
         DMAENASET |= (1<<Cfg_Ptr->ChannelNo);
-
-
 
         RetVar = DMA_OK;
     }
@@ -233,32 +229,31 @@ void GenerateSWReq(uint8_t ChannelNum)
 
 }
 
+
 void ISR_ErrorHandler()
 {   //if an error is detected , clear the flag and increment error counter.
     if (((DMAERRCLR & ERR_BIT) == ERR_BIT))
     {
-        //do something
+        /*ToDo:*/
 
         //clear the error flag.
         DMAERRCLR |= 1;
     }
     else
     {
-        /* do nothing */
+        /*ToDo*/
     }
 }
 
+//Disable the Current channel.
 DMA_RetType DMA_StopChannel(uint8_t ChannelID)
 {
     DMA_RetType RetVar;
+    const Channel_Attributes* Cfg_Ptr;
+    Cfg_Ptr = &DMA_Cfg[ChannelID];
 
     if(ChannelID < NumOfUsedChannels)
     {
-
-        const Channel_Attributes* Cfg_Ptr;
-
-        Cfg_Ptr = &DMA_Cfg[ChannelID];
-
         //Disable DMA Channel
         DMAENASET &= ~(1 << (Cfg_Ptr->ChannelNo));
 
