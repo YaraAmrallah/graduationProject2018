@@ -5,7 +5,6 @@
 
 #include "UART_Cfg.h"
 #include "DMA.h"
-#include "DMA_Cfg.h"
 #include <stdint.h>
 
 typedef enum {UART_OK = 0, UART_NOK} UART_RetType;
@@ -66,14 +65,17 @@ UART_RetType UART_StopCurrentReception(uint8_t UART_ID);
 UART_RetType UART_GetNumofRxBytes(uint8_t UART_ID, uint32_t *NumPtr);
 UART_RetType UART_ManageOngoingOperations(uint8_t UART_ID);
 
+void getGPSBuffer(uint8_t* GPSBuffAddress);
+
 UART_RetType UART_ReceiveStatus(uint8_t UART_ID,uint8_t *status,uint8_t shift);
 UART_RetType ErrorClear(uint8_t UART_ID,uint8_t shift);
 UART_RetType UART_GetInterruptStatus(uint8_t UART_ID,uint16_t *status,uint8_t shift);
 UART_RetType UART_ClearInterruptStatus(uint8_t UART_ID,uint8_t shift);
 UART_RetType UART_PeripheralProperties(uint8_t UART_ID,uint8_t *status,uint8_t peripheral);
 
+//Call back function to be used on the uart ISR.
+void GPS_ReceptionDone();
 
-//void DMA_Done(void);
 extern const UART_Cfg_Type UART_CfgParam [USED_UART_MODULES];
 extern uint8_t DMA_Done_Flag;
 extern DMA_CallBackPtr_t DoneCallBck[NumOfUsedChannels];
