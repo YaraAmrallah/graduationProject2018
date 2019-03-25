@@ -85,7 +85,7 @@ uint8_t I2C_Send(uint8_t I2CID, uint8_t Slave_address, uint8_t* Data)
 
             for(i=0;i<datacount-1;i++)
             {
-                k=i+1;
+                 k=i+1;
                 I2C_WRITE_DATA(I2CID,*(Data+k));
                 if(k != datacount-1)
                 {
@@ -155,8 +155,9 @@ uint8_t I2C_Receive(uint8_t I2CID, uint8_t Slave_address, uint8_t Datacount, uin
     while(I2CMCS(I2CID) & 1);    /*Checks if the I2C Master still busy*/
 
 
-    //I2C_READ_DATA(I2CID,Data); /* store the Data received */
     I2C_READ_DATA(I2CID,Data); /* store the Data received */
+
+	/* store the Data received */
 
     while(I2CMCS(I2CID) & 0x40); /*Check on the bus busy flag*/
 

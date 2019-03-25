@@ -6,6 +6,51 @@
 #include "tm4c123gh6pm.h"
 #include "I2C_CFG.h"
 
+
+
+typedef volatile uint32_t* const I2C_RegAddType;
+typedef volatile uint32_t* const GPIO_RegAddType;
+
+/*Register GPIO memory map*/
+#define PORTA_BASE_ADDRESS 0x40004000
+#define PORTB_BASE_ADDRESS 0x40005000
+#define PORTC_BASE_ADDRESS 0x40006000
+#define PORTD_BASE_ADDRESS 0x40007000
+#define PORTE_BASE_ADDRESS 0x40024000
+#define PORTF_BASE_ADDRESS 0x40025000
+
+#define RCGC_BASE_ADDRESS  0x400FE000
+#define PORTS_NUMBER 6u
+/*Base Address of Ports*/
+static const uint32_t PortsBaseAddressLut[PORTS_NUMBER] =
+{
+    PORTA_BASE_ADDRESS,
+    PORTB_BASE_ADDRESS,
+    PORTC_BASE_ADDRESS,
+    PORTD_BASE_ADDRESS,
+    PORTE_BASE_ADDRESS,
+    PORTF_BASE_ADDRESS
+};
+
+/*Needed GPIO Registers*/
+#define GPIO_REG_ADDRESS(CHANNEL_ID,REG_OFFSET)\
+(PortsBaseAddressLut[CHANNEL_ID] + REG_OFFSET)
+
+#define GPIOAFSEL_REG(PORT_ID)          *((GPIO_RegAddType)GPIO_REG_ADDRESS(PORT_ID,0x420))
+#define GPIOPCTL_REG(PORT_ID)           *((GPIO_RegAddType)GPIO_REG_ADDRESS(PORT_ID,0x52C))
+#define GPIODR2R_REG(PORT_ID)           *((GPIO_RegAddType)GPIO_REG_ADDRESS(PORT_ID,0x500))
+#define GPIODR4R_REG(PORT_ID)           *((GPIO_RegAddType)GPIO_REG_ADDRESS(PORT_ID,0x504))
+#define GPIODR8R_REG(PORT_ID)           *((GPIO_RegAddType)GPIO_REG_ADDRESS(PORT_ID,0x508))
+#define GPIOLOCK_REG(PORT_ID)           *((GPIO_RegAddType)GPIO_REG_ADDRESS(PORT_ID,0x520))
+#define GPIOCR_REG(PORT_ID)             *((GPIO_RegAddType)GPIO_REG_ADDRESS(PORT_ID,0x524))
+#define GPIODIR_REG(PORT_ID)            *((GPIO_RegAddType)GPIO_REG_ADDRESS(PORT_ID,0x400))
+#define GPIODEN_REG(PORT_ID)            *((GPIO_RegAddType)GPIO_REG_ADDRESS(PORT_ID,0x51C))
+#define GPIOODR_REG(PORT_ID)            *((GPIO_RegAddType)GPIO_REG_ADDRESS(PORT_ID,0x50C))
+#define RCGC_GPIO                       (*((volatile uint32_t *)0x400FE608))
+#define GPIO_PORT_UNLOCK_VALUE 0x4C4F434B
+
+
+
 #define MAX_SCL_FREQUENCY_SM		(100000U)
 #define MAX_SCL_FREQUENCY_FM		(400000U)
 #define	I2C_DELAY_PARAMETER			(50U)
@@ -104,32 +149,64 @@ typedef volatile uint32_t* const I2C_RegisterAddressType;
 #define  I2C_R_W_POS                                (0)
 #define  I2C_HS_POS                                 (4U)
 #define  I2C_HS_SCL_POS                             (7u)
+/*
+******************************************************************************
+*                                                                            *
+*                                                                            *
+*                                  MACRROS                                   *
+******************************************************************************/
 
+
+#define I2C_SlaveADD_send(I2C_ID,Slave_add,ReadorWrite)           (I2CMSA(I2C_ID) = ReadorWrite << 0);\
+                                                                 (I2CMSA(I2C_ID) |= Slave_add << 1)
+#define I2C_WRITE_DATA(I2C_ID,Data)                               (I2CMDR(I2C_ID) = Data)
+#define I2C_READ_DATA(I2C_ID,Data)                                (*Data++ = I2CMDR(I2C_ID))
+#define I2C_MasterCTL(I2C_ID,operation)                           (I2CMCS(I2C_ID) = operation)
 
 typedef enum
 {
 			I2C_NOK=0,
 			I2C_OK=1,
-			I2C_SendDATAOK=2,
-			I2C_SendDATANOK=3,
-			I2C_StartOK=4,
-			I2C_StartNOK=5,
-			I2C_SendSlaveAddressOK=6,
-			I2C_SendSlaveAddressNOK=7,
-			I2C_GetDataOK=8,
-			I2C_GetDataNOK=9
-
+			I2C_SINGLENOK=2,
+			I2C_SINGLEOK=3,
+			I2C_BURSTOK=4,
+			I2C_BURSTNOK=5,
+I2C_READDATAOK=6,
+I2C_BURST_READOK=7,
+I2C_SREAD_NOK=8,
+I2C_SREAD_OK=9,
+I2C_NOBUSY=10,
+I2C_BUSY=11
 }I2C_CheckType;
-
 typedef enum
 {
-	  I2C_Start=0,
-    I2C_SendSlaveAdd=1,
-	  I2C_SendDATAA=2,	
-    I2C_GetDataa=3
+    SINGLE_OP=0x00000007,
+    BURST_SEND_START=0x00000003,
+    BURST_SEND_CONT =0x00000001,
+    BURST_DONE=0x00000005,
+    BURST_RECEIVE_START=0x0000000b,
+    BURST_RECEIVE_CONT=0x00000009,
+    BURST_RECEIVE_ERROR_STOP=0x00000004
+}Ops;
+typedef enum
+{
+	  I2C_SINGLESEND=0,
+    I2C_BURSTSEND_STAT=1,
+    MASTER_BUSY=2,
+    I2C_BUSBUSY=3,
+    I2C_MBUSY=5
+
+	 
 }I2C_Checkstatus;
 
-
+typedef struct
+{
+    uint8_t PortID;
+    uint8_t SDA_Pin;
+    uint8_t SCK_Pin;
+    uint32_t Clock;
+    uint8_t Enable;
+}I2C_Mode;
 typedef enum {
 
 	I2C_Transmit=0,
@@ -241,6 +318,8 @@ extern uint8_t I2C_InitFlag;
  */
 
 I2C_CheckType I2C_Init(void);
+extern uint8_t I2C_TX(uint8_t I2CID, uint8_t Slave_address, uint8_t* Data,uint8_t datacount);
+
 extern void I2C_GenerateStart(uint8_t Peripheral_ID);
 //extern I2C_CheckType I2C_StartStatus(uint8_t Peripheral_ID);
 
