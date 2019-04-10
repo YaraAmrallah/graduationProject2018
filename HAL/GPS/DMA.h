@@ -32,8 +32,8 @@ typedef enum {Peripheral_to_Memory}TargetDMA;
 typedef enum {eightBit=0x0,sixteenBit,ThirtyTwoBit,No_increment}DST_SRC_INC;//DST shift by 30 SRC shift by 26
 typedef enum {eightBit_D=0x0,sixteenBit_D,ThirtyTwoBit_D}DST_SRC_SIZE;  //DST shift by 28 SRC shift by 24
 
-typedef enum {T1=0x0,T2,T4,T8,T16,T32,T64,T128,T256,T512,T1024}ARBSIZE;     //Number of transfers
-typedef enum {Stop=0x0,Basic,AutoRequest}XFERMODE;
+typedef enum {T1 = 0x0,T2,T4,T8,T16,T32,T64,T128,T256,T512,T1024}ARBSIZE;     //Number of transfers
+typedef enum {Stop = 0x0, Basic, AutoRequest}XFERMODE;
 
 typedef struct
 {   DST_SRC_INC DSTINC;
@@ -58,7 +58,7 @@ extern const CTRLWordParameters CTRLWord[NumOfUsedChannels];
 extern TargetDMA Target;
 
 DMA_RetType DMA_Init(void);
-DMA_RetType DMA_StartChannel(uint8_t DMAGroupID,uint32_t SRC, uint32_t DES, uint16_t TransferSize);
+DMA_RetType DMA_StartChannel(uint8_t DMAGroupID, uint32_t SRC, uint32_t DES, uint16_t TransferSize);
 DMA_RetType DMA_StopChannel(uint8_t ChannelID);
 
 

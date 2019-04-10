@@ -17,6 +17,7 @@ const UART_Cfg_Type UART_CfgParam [USED_UART_MODULES]={
           Disabled,             //stick parity
           Disabled,             //fifo
           Disable_ALL,          //DMA
+          NotAssigned,         //DMA Group Number
           FIFO_2,              //fifo tx
           FIFO_2,               //fifo rx
           SystemClock,          //UART clock = sytem clock.
@@ -40,6 +41,7 @@ const UART_Cfg_Type UART_CfgParam [USED_UART_MODULES]={
       Disabled,             //stick parity
       Disabled,              //fifo
       Enabled_RX,          //DMA
+      GroupZero,            //DMA Group Number
       FIFO_14,              //FIFO tx
       FIFO_2,               //fifo rx
       SystemClock,          //UART clock = sytem clock.

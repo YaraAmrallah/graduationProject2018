@@ -121,8 +121,7 @@ void BlinkLed(uint8_t period,uint8_t groupId);
 #define RXMSASKEDINT_OFFSET 4
 
 
-//DMA Data
-static uint8_t UsedDMAChannelGroupNo = 0;
+
 
 
 /********
@@ -212,7 +211,7 @@ UART_RetType UART_StartTransmission(uint8_t UART_ID,uint8_t* Tx_text,uint32_t Tx
             if ((CfgPtr->DMAEN == Enabled_TX))
             {
                 //Start the DMA channel
-                DMA_StartChannel(UsedDMAChannelGroupNo,
+                DMA_StartChannel(CfgPtr->DMAGroupNum,
                                  UARTBaseAddLuT[CfgPtr->UART_ID],
                                  (uint32_t) (Tx_text + TxLength), TxLength);
             }
@@ -321,10 +320,10 @@ UART_RetType UART_StartReceiving(uint8_t UART_ID, uint8_t* Rx_Text, uint32_t RxL
              if(UARTDriverStates[CfgPtr->UART_ID] == UARTState_init)
              {
             //Check if the current UART module is using DMA.
-            if ((CfgPtr->DMAEN == Enabled_RX))
+            if (CfgPtr->DMAEN == Enabled_RX)
             {
                 //Start the DMA channel
-                DMA_StartChannel(UsedDMAChannelGroupNo,
+                DMA_StartChannel(CfgPtr->DMAGroupNum,
                                  UARTBaseAddLuT[CfgPtr->UART_ID],
                                  (uint32_t) (Rx_Text + RxLength), RxLength);
             }

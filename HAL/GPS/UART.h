@@ -12,6 +12,7 @@ typedef enum {OneStopBit = 0, TwoStopBit = 1} UART_StopBitsType;
 typedef enum {Data_5 = 0, Data_6 = 1, Data_7 = 2, Data_8 = 3} UART_WordLength;
 typedef enum {Disabled = 0, Enabled = 1} UART_EnableType;
 typedef enum {Disable_ALL = 0, Enabled_RX = 1 ,Enabled_TX = 2,ENABLED_ERR = 8} UART_DMA_EnableType;
+typedef enum {GroupZero = 0, NotAssigned = 0xFF}DMAGroupNumber;
 typedef enum {FIFO_2=0, FIFO_4=1, FIFO_8=2, FIFO_12=3, FIFO_14=4}FIFO_INT_Level ;
 typedef enum {Regular_Speed = 16, High_speed = 8} BaudRate_Speed;
 typedef enum {SystemClock=0, PIOSC=5}UART_ClockCfg; // if PIOSC is selected, Must be 9MHz or higher.
@@ -32,6 +33,7 @@ UART_EnableType Parity;
 UART_EnableType StickParity;
 UART_EnableType FIFOEN;
 UART_DMA_EnableType DMAEN;
+DMAGroupNumber DMAGroupNum;
 FIFO_INT_Level FIFO_Level_TX;
 FIFO_INT_Level FIFO_Level_RX;
 UART_ClockCfg ClockCfg;
@@ -64,9 +66,6 @@ UART_RetType UART_StartReceiving(uint8_t UART_ID, uint8_t* Rx_Text, uint32_t RxL
 UART_RetType UART_StopCurrentReception(uint8_t UART_ID);
 UART_RetType UART_GetNumofRxBytes(uint8_t UART_ID, uint32_t *NumPtr);
 UART_RetType UART_ManageOngoingOperations(uint8_t UART_ID);
-
-void getGPSBuffer(uint8_t* GPSBuffAddress);
-
 UART_RetType UART_ReceiveStatus(uint8_t UART_ID,uint8_t *status,uint8_t shift);
 UART_RetType ErrorClear(uint8_t UART_ID,uint8_t shift);
 UART_RetType UART_GetInterruptStatus(uint8_t UART_ID,uint16_t *status,uint8_t shift);
@@ -77,9 +76,5 @@ UART_RetType UART_PeripheralProperties(uint8_t UART_ID,uint8_t *status,uint8_t p
 void GPS_ReceptionDone();
 
 extern const UART_Cfg_Type UART_CfgParam [USED_UART_MODULES];
-extern uint8_t DMA_Done_Flag;
-extern DMA_CallBackPtr_t DoneCallBck[NumOfUsedChannels];
-extern const Channel_Attributes DMA_Cfg[NumOfUsedChannels];
-
 
 #endif /* UART_H_ */
