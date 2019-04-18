@@ -3,6 +3,12 @@
 
 #include <stdint.h>
 typedef volatile uint32_t * const M4_PrefRegType;
+
+
+/* Function to enable Golbal interrupt */
+void EnableInterrupt(void);
+void DisableInterrupt(void);
+
 #define M4_PREF_BASE_ADD 0xE000E000
 
 /*System Timer (SysTick) Registers*/
@@ -39,10 +45,10 @@ typedef volatile uint32_t * const M4_PrefRegType;
 #define IS_INT_ACTIVE(INT_NUM)  (ACTIVE_REG(INT_NUM) & (1 << ((INT_NUM) % 32)) != 0x00)? 1 : 0
 
 #define PRI_REG_BASE 0x400
-#define PRI_REG_NUM(INT_NUM) (INT_NUM/4)
-#define PRI_REG(INT_NUM) *((M4_PrefRegType)((PRI_REG_NUM(INT_NUM) * 4) + PRI_REG_BASE + M4_PREF_BASE_ADD))
-#define SET_INT_PRI(INT_NUM,PRI_NUM)  PRI_REG(INT_NUM) &= (0xFFFFFFF0 << ((INT_NUM) % 4));\
-                                      PRI_REG(INT_NUM) |= ((PRI_NUM & 0x0f) << ((INT_NUM) % 4))
+#define PRI_REG_NUM(INT_NUM) (INT_NUM/4) //63-29=34 (tarteeb el registers in data sheet)
+#define PRI_REG(INT_NUM) *((M4_PrefRegType)((PRI_REG_NUM(INT_NUM) * 4) + PRI_REG_BASE + M4_PREF_BASE_ADD))//addition of any number divided by 4
+#define SET_INT_PRI(INT_NUM,PRI_NUM) PRI_REG(INT_NUM) &= ~(0x0F <<  (8*(INT_NUM%4)+5) );\
+                                     PRI_REG(INT_NUM) |= ((PRI_NUM & 0X0F)<< (8*(INT_NUM%4)+5))
 
 #define SWTRIG_REG   *((M4_PrefRegType)(M4_PREF_BASE_ADD + 0xF00))
 /***********************************************************************************/
@@ -64,6 +70,8 @@ typedef volatile uint32_t * const M4_PrefRegType;
 #define RCGCQEI_REG      *((M4_PrefRegType)(SYS_CTRL_BASE_ADDRESS + 0x644))
 #define RCGCEEPROM_REG   *((M4_PrefRegType)(SYS_CTRL_BASE_ADDRESS + 0x658))
 #define RCGCWTIMER_REG   *((M4_PrefRegType)(SYS_CTRL_BASE_ADDRESS + 0x65C))
+#define RCGC0_REG		 *((M4_PrefRegType)(SYS_CTRL_BASE_ADDRESS + 0x100))
+#define RCGC1_REG		 *((M4_PrefRegType)(SYS_CTRL_BASE_ADDRESS + 0x200))
 /***********************************************************************************/
 
 #endif
