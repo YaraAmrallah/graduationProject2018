@@ -9,7 +9,6 @@
 */
 int memCmp(const void* M1, const void* M2, uint32_t n)
 {
-
         const uint8_t *Ptr1 = M1, *Ptr2 = M2;
         uint8_t RetVar = 0;
         while(n>0)

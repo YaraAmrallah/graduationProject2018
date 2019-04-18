@@ -9,7 +9,7 @@ void receive1 (void);
 const UART_Cfg_Type UART_CfgParam [USED_UART_MODULES]={
              {
           0x00,                 //ID
-          9600,               //Baud Rate
+          115200,               //Baud Rate
           Regular_Speed,        // 16 in the baud rate equation
           OneStopBit,
           Data_8,               //Data size

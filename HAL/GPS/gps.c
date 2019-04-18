@@ -1,9 +1,10 @@
 #include<gps.h>
 
 
-#define TOTAL_ARR_LENGTH     1024
-#define GPRMCDataLENGTH      28
-#define GPRMCIndicatorLength 6
+#define TOTAL_ARR_LENGTH       1024
+#define GPRMC_DATA_LENGTH      40
+#define GPRMC_INDICATOR_LENGTH 6
+#define GPS_VALIDITY_OFFSET    2
 /*
  * TO BE REMOOOOOOOOOOVED
  * WARNING ! TESTING ONLY
@@ -18,8 +19,10 @@ void BlinkLed(uint8_t period,uint8_t groupId);
 uint8_t GPSRawData[TOTAL_ARR_LENGTH];
 //required data after the NMEA (GPRMC) Command
 const uint8_t GPSDataFormat[] = "$GPRMC";
+const uint8_t GPSDataValid = 'V';
+
 //To put GPRMC data in
-uint8_t GPS_DataSentence[GPRMCDataLENGTH];
+uint8_t GPS_DataSentence[GPRMC_DATA_LENGTH];
 
 GPS_State GPSState;
 
@@ -65,18 +68,57 @@ GPS_RetType GPS_ReqData(uint8_t UART_ID)
 GPS_RetType GPS_GetData(uint8_t InputArray[],uint8_t GPRMCData[])
 {
     GPS_RetType RetVar;
-    uint8_t Counter1, Counter2, DataFound=1;
+    uint8_t Counter1, Counter2, DataFound=1 , CommaCounter, Valid = 0;
 
     if(GPSState == GPS_DONE_RECEIVING)
     {
-        for(Counter1=0; (Counter1<TOTAL_ARR_LENGTH) && (DataFound !=0 ); Counter1++)
+        for(Counter1 = 0; ((Counter1 < TOTAL_ARR_LENGTH) && (Valid == 0)); Counter1++)
     {
-        DataFound = memCmp(InputArray + Counter1, GPSDataFormat, GPRMCIndicatorLength);
+            /*
+             * memCmp -> Returns zero if the required  data is found
+             *        -> Otherwise returns non zero integer.
+             */
+        DataFound = memCmp(InputArray + Counter1, GPSDataFormat, GPRMC_INDICATOR_LENGTH);
+
+             if(DataFound == 0)
+            {
+                CommaCounter = 0;
+
+                for(Counter2=0;Counter2<20;Counter2++)
+                {
+                   if(InputArray[Counter1 + Counter2] == ',')
+                   {
+                       CommaCounter++;
+                   }
+                   /*
+                    * There are 2 Commas before the first occurrence of The Character that
+                    * indicates sentence validity
+                    */
+                   if(CommaCounter == GPS_VALIDITY_OFFSET)
+                   {
+                       //CHECK IF THE next character indicates GPS validity.
+                       if(InputArray[Counter1 + Counter2 + 1] == 'A')
+                       {
+                           Valid = 1;
+                           /*
+                            * Counter1 Now is set at the second character in the required sentence
+                            * So, It needs to be set to the first character again to Copy the sentence
+                            * Then,
+                            * Break the first Loop indicating the Required Data is found.
+                            */
+                           Counter1--;
+                           break;
+                       }
+                   }
+                }
+            }
     }
-    //If the Data is found
-    if(DataFound == 0)
+
+
+    //If the Data is found & Valid
+    if(Valid == 1)
     {   //Copy the Data Contents to another array.
-        for(Counter2 = 0; Counter2 <= GPRMCDataLENGTH; Counter2++)
+        for(Counter2 = 0; Counter2 <= GPRMC_DATA_LENGTH; Counter2++)
         {
             GPRMCData[Counter2] =  InputArray[Counter1 + Counter2];
         }
@@ -100,5 +142,5 @@ GPS_RetType GPS_GetData(uint8_t InputArray[],uint8_t GPRMCData[])
 void GPS_ReceptionDone()
 {
      GPSState = GPS_DONE_RECEIVING;
-     BlinkLed(20, 0);
+     BlinkLed(10,0);
 }
