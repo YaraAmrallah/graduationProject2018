@@ -9,15 +9,14 @@
 
 /*ToDo
  * GPS extern and # define - > to be deleted*/
-#define  TOTAL_ARR_LENGTH 1024
-#define  GPRMCDataLENGTH 28
+
 
 uint8_t Data[1024];
 uint8_t DMA[1024];
 uint32_t i=0, k =0;
 
 extern uint8_t GPSRawData[TOTAL_ARR_LENGTH];
-extern uint8_t GPS_DataSentence[GPRMCDataLENGTH];
+extern uint8_t GPS_DataSentence[GPRMC_DATA_LENGTH];
 extern uint8_t UARTDriverStates[USED_UART_MODULES];
 
 
@@ -28,7 +27,7 @@ void BlinkLed(uint8_t period,uint8_t groupId);
 void delay1ms(uint64_t time);
 
 int main(void)
- {
+{
 
     EN_INT(6);
     EN_INT(46);
@@ -57,7 +56,7 @@ int main(void)
     {
 
 
-        GPS_ReqData(UART1);
+        GPS_Main_Function_Handling();
         /*
             for(i=0;i<3;i++)
             {

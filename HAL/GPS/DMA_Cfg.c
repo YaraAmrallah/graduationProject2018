@@ -6,7 +6,7 @@ void DMA_Done(void);
 const Channel_Attributes DMA_Cfg[NumOfUsedChannels] = {
 //channel 8 is UART1 RX
 /*
- * {CHANNEL ID,
+ * CHANNEL ID,
  * Channel No
  * Priority
  * Burst only

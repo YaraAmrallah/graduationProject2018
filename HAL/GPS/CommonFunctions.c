@@ -17,6 +17,10 @@ int memCmp(const void* M1, const void* M2, uint32_t n)
             {
                 RetVar = *Ptr1 - *Ptr2;
                 break;
+                /*  Suggestion
+                 *  ----------
+                 *  while(n>0 && RetVar == 0)
+                 */
             }
             else
             {

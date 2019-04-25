@@ -54,7 +54,7 @@ typedef volatile uint32_t* const ADDR_CASTING;
 
 
 /*Constants*/
-#define MAX_ARBITRATION_SIZE 1024
+#define MAX_TRANSFER_SIZE 1024
 #define TRANSFER_SIZE_DEC    1
 #define USED_DMA_CHANNEL     8
 #define ZERO_CHANNEL_GROUP   7
@@ -103,83 +103,83 @@ uint8_t SWReqGenerated = 0;
 
 //Before the DMA is initialized, It must be enabled on the peripheral side.
 //Initializes the DMA modules spcified in the configurations
-DMA_RetType DMA_Init(void){
+DMA_RetType DMA_Init(void)
+{
 
     uint8_t itrator = 0;
     DMA_RetType RetVar;
     const Channel_Attributes* Cfg_Ptr;
     const CTRLWordParameters* CTRL_Ptr;
 
-    RCGCDMA_REG     |= (1 << 0); //enable DMA clock Gating control
-    DMACFG          |= (1 << 0); // enable DMA controller
-    DMACTLBASE      =  ((uint32_t)CHNControlTable);   //1024 byte aligned address.
-                                                 //This specifies the location of the control table in the system memory.
-    for(itrator=0;itrator<NumOfUsedChannels;itrator++)
+    RCGCDMA_REG |= (1 << 0); //enable DMA clock Gating control
+    DMACFG |= (1 << 0); // enable DMA controller
+    DMACTLBASE = ((uint32_t) CHNControlTable);   //1024 byte aligned address.
+    //This specifies the location of the control table in the system memory.
+    for (itrator = 0; itrator < NumOfUsedChannels; itrator++)
     {
-    Cfg_Ptr = &DMA_Cfg[itrator];
-    CTRL_Ptr= &CTRLWord[itrator];
+        Cfg_Ptr = &DMA_Cfg[itrator];
+        CTRL_Ptr = &CTRLWord[itrator];
 
-    //prepare the  ctrl word register structure according to configurations (without Transfer Size)
-            CTRL_Words[Cfg_Ptr->DMA_ID] |=    (uint32_t)(CTRL_Ptr->DSTINC       << DSTINC_OFFSET)    |
-                                              (uint32_t)(CTRL_Ptr->DST_SRC_SIZE << DSTSIZE_OFFSET)   |
-                                              (uint32_t)(CTRL_Ptr->SRCINC       << SRCINC_OFFSET)    |
-                                              (uint32_t)(CTRL_Ptr->DST_SRC_SIZE << SRCSIZE_OFFSET)   |
-                                              (uint32_t)(CTRL_Ptr->ARBSize      << ARBSIZE_OFFSET)   |
-                                              (uint32_t)(CTRL_Ptr->TransferMode << XFERMODE_OFFSET);
+        //prepare the  ctrl word register structure according to configurations (without Transfer Size)
+        CTRL_Words[Cfg_Ptr->DMA_ID] |= (uint32_t) ((CTRL_Ptr->DSTINC) <<  DSTINC_OFFSET)
+                                    | (uint32_t) ((CTRL_Ptr->DST_SRC_SIZE) << DSTSIZE_OFFSET)
+                                    | (uint32_t) ((CTRL_Ptr->SRCINC) << SRCINC_OFFSET)
+                                    | (uint32_t) ((CTRL_Ptr->DST_SRC_SIZE) << SRCSIZE_OFFSET)
+                                    | (uint32_t) ((CTRL_Ptr->ARBSize) << ARBSIZE_OFFSET)
+                                    | (uint32_t) ((CTRL_Ptr->TransferMode) << XFERMODE_OFFSET);
 
+        //Peripheral To memory
+        if (Target == Peripheral_to_Memory)
+        {
+            //CLEAR then set if configured
+            DMAPRIOCLR |= (1 << Cfg_Ptr->ChannelNo);         //priority
+            DMAPRIOSET |= (Cfg_Ptr->Priority << Cfg_Ptr->ChannelNo);
 
-    //Peripheral To memory
-    if(Target == Peripheral_to_Memory)
-    {
-        //CLEAR then set if configured
-              DMAPRIOCLR |= (1 << Cfg_Ptr->ChannelNo);         //priority
-              DMAPRIOSET |= (Cfg_Ptr->Priority<< Cfg_Ptr->ChannelNo);
+            DMAALTCLR |= (1 << PRIMARY_CHANNEL);          //Primary Channel
+            DMAALTSET |= (PRIMARY_CHANNEL << Cfg_Ptr->ChannelNo);
 
-              DMAALTCLR |= (1 << PRIMARY_CHANNEL);          //Primary Channel
-              DMAALTSET |= (PRIMARY_CHANNEL << Cfg_Ptr->ChannelNo);
+            DMAUSEBURSTCLR |= (1 << Cfg_Ptr->ChannelNo);     //Burst control
+            DMAUSEBURSTSET |= (Cfg_Ptr->BurstOnly << Cfg_Ptr->ChannelNo);
 
-              DMAUSEBURSTCLR |= (1 << Cfg_Ptr->ChannelNo);     //Burst control
-              DMAUSEBURSTSET |= (Cfg_Ptr->BurstOnly << Cfg_Ptr->ChannelNo);
+            DMAREQMASKCLR |= (1 << Cfg_Ptr->ChannelNo); //Enable \ Disable requests
+            DMAREQMASKSET |= ((Cfg_Ptr->EnableDMARequests)
+                    << (Cfg_Ptr->ChannelNo));
 
-              DMAREQMASKCLR |= (1 << Cfg_Ptr->ChannelNo);     //Enable \ Disable requests
-              DMAREQMASKSET |= ((Cfg_Ptr -> EnableDMARequests) << (Cfg_Ptr->ChannelNo));
+            //Store the CallBack Pointers in their place in the array
+            DoneCallBck[itrator] = (Cfg_Ptr->DMADonePtr);
 
-              //Store the CallBack Pointers in their place in the array
-              DoneCallBck[itrator] = (Cfg_Ptr->DMADonePtr);
-
-              //Channel assignment
-              //channel assignment is divided into 4 groups
-              //each register CHANNEL MAP holds 8 channels each has 4 bit field
-              //values from 1 to 4 are  filled in the register to choose the channel assignment to a specific peripheral mentioned in the table.
-              if((Cfg_Ptr -> ChannelNo) <= ZERO_CHANNEL_GROUP)
-              {
-                  DMACHMAP0 |= ((Cfg_Ptr -> ChannelAssignments) << ((Cfg_Ptr -> ChannelNo) * OFFSET_MULTIPLIER));
-              }
-              else if((Cfg_Ptr -> ChannelNo) <= FIRST_CHANNEL_GROUP)
-              {
-                  DMACHMAP1 |= ((Cfg_Ptr -> ChannelAssignments) << (((Cfg_Ptr -> ChannelNo) - CHMAP1_OFFSET) * OFFSET_MULTIPLIER));
-              }
-              else if((Cfg_Ptr -> ChannelNo) <= SECOND_CHANNEL_GROUP)
-              {
-                  DMACHMAP2 |= ((Cfg_Ptr -> ChannelAssignments) << (((Cfg_Ptr -> ChannelNo) - CHMAP2_OFFSET) * OFFSET_MULTIPLIER));
-              }
-              else if((Cfg_Ptr -> ChannelNo) <= THIRD_CHANNEL_GROUP)
-              {
-                  DMACHMAP3 |= ((Cfg_Ptr -> ChannelAssignments) << (((Cfg_Ptr -> ChannelNo) - CHMAP3_OFFSET) * OFFSET_MULTIPLIER));
-              }
-              else
-              {
-                  RetVar = DMA_NOK;
-              }
+            //Channel assignment
+            //channel assignment is divided into 4 groups
+            //each register CHANNEL MAP holds 8 channels each has 4 bit field
+            //values from 1 to 4 are  filled in the register to choose the channel assignment to a specific peripheral mentioned in the table.
+            if ((Cfg_Ptr->ChannelNo) <= ZERO_CHANNEL_GROUP)
+            {
+                DMACHMAP0 |= ((Cfg_Ptr->ChannelAssignments) << ((Cfg_Ptr->ChannelNo) * OFFSET_MULTIPLIER));
+            }
+            else if ((Cfg_Ptr->ChannelNo) <= FIRST_CHANNEL_GROUP)
+            {
+                DMACHMAP1 |= ((Cfg_Ptr->ChannelAssignments) << (((Cfg_Ptr->ChannelNo) - CHMAP1_OFFSET) * OFFSET_MULTIPLIER));
+            }
+            else if ((Cfg_Ptr->ChannelNo) <= SECOND_CHANNEL_GROUP)
+            {
+                DMACHMAP2 |= ((Cfg_Ptr->ChannelAssignments) << (((Cfg_Ptr->ChannelNo) - CHMAP2_OFFSET) * OFFSET_MULTIPLIER));
+            }
+            else if ((Cfg_Ptr->ChannelNo) <= THIRD_CHANNEL_GROUP)
+            {
+                DMACHMAP3 |= ((Cfg_Ptr->ChannelAssignments) << (((Cfg_Ptr->ChannelNo) - CHMAP3_OFFSET) * OFFSET_MULTIPLIER));
+            }
+            else
+            {
+                RetVar = DMA_NOK;
+            }
         }
         else
         {
             RetVar = DMA_NOK;
         }
-    }//end of the loop
-return RetVar;
+    }              //end of the loop
+    return RetVar;
 }
-
 
 //This function enables the specified channel (related to the peripheral)
 //by assigning the Configurations in the control table located in the memory.
@@ -189,7 +189,7 @@ DMA_RetType DMA_StartChannel(uint8_t DMAGroupID,uint32_t SRC, uint32_t DES, uint
     const Channel_Attributes* Cfg_Ptr;
     Cfg_Ptr = &DMA_Cfg[DMAGroupID];
     //Check if the Transfer Size is a valid number
-    if(TransferSize <= MAX_ARBITRATION_SIZE)
+    if(TransferSize <= MAX_TRANSFER_SIZE)
     {
         //Disable DMA Channel
         DMAENACLR |=  (1 << (Cfg_Ptr->ChannelNo));
@@ -203,7 +203,7 @@ DMA_RetType DMA_StartChannel(uint8_t DMAGroupID,uint32_t SRC, uint32_t DES, uint
         ((DMA_ADDRESSES*)DMACTLBASE)[USED_DMA_CHANNEL].CHCTLP |= CTRL_Words[Cfg_Ptr->DMA_ID];
 
         //Enable DMA channel
-        DMAENASET |= (1<<Cfg_Ptr->ChannelNo);
+        DMAENASET |= (1 << (Cfg_Ptr->ChannelNo));
 
         RetVar = DMA_OK;
     }

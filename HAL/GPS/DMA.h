@@ -7,7 +7,7 @@
 
 #define RECEPTION_ARRAY_SIZE    1024
 
-#pragma DATA_ALIGN(CHNControlTable,1024);
+#pragma DATA_ALIGN(CHNControlTable,RECEPTION_ARRAY_SIZE);
 uint8_t CHNControlTable[RECEPTION_ARRAY_SIZE];
 
 typedef volatile uint32_t ADDR_CASTING_CTRL;
