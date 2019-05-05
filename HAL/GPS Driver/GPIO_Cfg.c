@@ -94,7 +94,25 @@ const GPIO_CfgType GPIO_ConfigParam [GPIO_GROUPS_NUMBER] =
                        0x00,0x00,0x00,
                        0xff,
                        0
-           }
-				         };
+           },
+		 {           //can rx (group 9)
+		             0x01,1<<4,
+		             0xff,0,0,
+		             0x00,
+		             0x00,0x00,0x00,
+		             0x00,0x00,0x00,
+		             0xff,
+		             0
+		 },
+		 {           //can tx (group 10)
+		             0x01,1<<5,
+		             0xff,0,0,
+		             0xff,
+		             0x00,0x00,0x00,
+		             0xff,0x00,0x00,
+		             0xff,
+		             0
+		 }
+		};
 
 

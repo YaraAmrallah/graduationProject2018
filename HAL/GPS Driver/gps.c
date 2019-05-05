@@ -17,10 +17,15 @@
 #define RAWDATA_CIRC_BUFF_LENGTH    2
 
 
+
 /*------------------------------------------- Circular Buffer -------------------------------------------*/
 uint8_t GPS_CircularBufferCount = 0;
 uint8_t GPS_RawDataCircBufferCount = 0;
 uint8_t *GPS_ActiveAddress;
+GPS_DataLock GPS_DataLocked = GPS_UNLOCKED;
+
+/*********************CAN Flag**********************************/
+uint8_t Can_Sent = 1;
 
 #ifdef DEBUG_MODE
 
@@ -39,19 +44,19 @@ uint8_t GPSRawData[TOTAL_ARR_LENGTH];
 //To put GPRMC sentence only
 uint8_t GPS_DataSentence[CIRC_BUFF_LENGTH][GPRMC_DATA_LENGTH];
 
-
+uint8_t GPS_Sening_Buff[GPRMC_DATA_LENGTH];
 /*------------------------------------------- State Variables -------------------------------------------*/
-static uint8_t GPS_Initialized = 0;
-static uint8_t GPS_DataReceived = 0;
 
-static GPS_State GPSState;
+static GPS_State GPSState = GPS_IDLE;
 
-
+static GPS_Check_Init GPS_Flag_Init;
+static GPS_Received GPS_DataReceived;
 
 GPS_RetType GPS_Init()
 {
     GPS_RetType RetVar;
-    GPS_Initialized = 1;
+    GPS_Flag_Init = GPS_INIT;
+    GPS_DataReceived = GPS_DATA_NOTRECEIVED;
     RetVar = GPS_OK;
     return RetVar;
 }
@@ -63,23 +68,7 @@ GPS_RetType GPS_Init()
  */
 void GPS_Main_Function_Handling()
 {
-
-    /*
-     * Flags Handling
-     */
-    if(GPS_Initialized == 1)
-    {
-        GPSState = GPS_INITIALIZED;
-        GPS_Initialized = 0;
-    }
-
-    if(GPS_DataReceived == 1)
-    {
-        GPSState = GPS_DONE_RECEIVING;
-        GPS_DataReceived = 0;
-
-    }
-
+    GPS_RetType RetVar = GPS_NOK;
     /*
      * Circular BUffer Handling
      */
@@ -104,35 +93,73 @@ void GPS_Main_Function_Handling()
      */
     switch(GPSState)
        {
+                   case GPS_IDLE:
+                       if(GPS_Flag_Init == GPS_INIT)
+                           {
+                               GPSState = GPS_INITIALIZED;
+                           }
+                       else
+                           {
+                             /* do nothing */
+                           }
+                   break;
+
+
                    case GPS_INITIALIZED:
-                       GPSState = GPS_READY;
+                       //Request Data through DMA.
                        GPS_ReqData(UsedUartModuleNum);
+                       GPSState = GPS_READY;
                        break;
+
 
                    case GPS_READY:
-                       //GPS_ReqData(UsedUartModuleNum);
                        //Waiting For Data Through DMA interrupt over UART.
+                       if((GPS_DataReceived == GPS_DATA_RECEIVED))
+                           {
+                               GPSState = GPS_DONE_RECEIVING;
+                               GPS_DataReceived = GPS_DATA_NOTRECEIVED;
+
+                           }
+                       else
+                       {
+                           /* do nothing */
+                       }
                        break;
+
 
                    case GPS_DONE_RECEIVING:
-                       GPS_Parse(GPS_ActiveAddress,GPS_DataSentence);
+                       //Generate Another DMA Request.
                        GPS_ReqData(UsedUartModuleNum);
+                       //Parse the Received Data
+                       RetVar = GPS_Parse(GPS_ActiveAddress,GPS_DataSentence);
+                       if(RetVar  == GPS_OK)
+                       {
                        GPSState = GPS_DONE_PARSING;
+                       }
+                       else
+                       {
+                           //Generate another Request.
+                           GPSState = GPS_INITIALIZED;
+                       }
                        break;
 
+
                    case GPS_DONE_PARSING:
-                       /*
-                        * ToDo
-                        * Send
-                        * GPS_DataSentence[GPS_CircularBufferCount][GPRMC_DATA_LENGTH];
-                        *  through CAN Bus
-                        */
-                       GPSState = GPS_READY;
+                       //Lock the buffer from changing Data
+                       GPS_DataLocked = GPS_LOCKED;
+                       if(Can_Sent == 1)
+                       {
+                       AsyncTxData_Request(0,GPS_Sening_Buff);
+                       Can_Sent = 0;
+                       }
+                       //Generate another Request.
+                       GPSState = GPS_INITIALIZED;
                        break;
 
 
                    default:
-                       /*Do nothing
+                       /*
+                        * Do nothing
                         */
 
        }
@@ -144,7 +171,7 @@ GPS_RetType GPS_ReqData(uint8_t UART_ID)
 {
     GPS_RetType RetVar;
     //Check if parsing is finished
-    if ((GPSState == GPS_READY) || (GPSState == GPS_DONE_RECEIVING))
+    if ((GPSState == GPS_INITIALIZED))
     {
         //Start Receiving the next block of bytes specified with RXLength.
         UART_StartReceiving(UART_ID, GPS_ActiveAddress, TRANSFER_SIZE);
@@ -163,7 +190,7 @@ GPS_RetType GPS_ReqData(uint8_t UART_ID)
  *  GPS sentences and Provides it in an array. **/
 GPS_RetType GPS_Parse(uint8_t InputArray[],uint8_t GPRMCData[][GPRMC_DATA_LENGTH])
 {
-    GPS_RetType RetVar;
+    GPS_RetType RetVar = GPS_OK;
     uint8_t Counter2;
     uint8_t DataFound = 1;
     uint8_t CommaCounter;
@@ -171,6 +198,9 @@ GPS_RetType GPS_Parse(uint8_t InputArray[],uint8_t GPRMCData[][GPRMC_DATA_LENGTH
     uint16_t Counter1;
     if (GPSState == GPS_DONE_RECEIVING)
     {
+        /*
+         * ToDo checks
+         */
         for (Counter1 = 0; ((Counter1 < TRANSFER_SIZE) && (ValidFlag == 0));
                 Counter1++)
         {
@@ -184,9 +214,9 @@ GPS_RetType GPS_Parse(uint8_t InputArray[],uint8_t GPRMCData[][GPRMC_DATA_LENGTH
             if (DataFound == 0)
             {
                 CommaCounter = 0;
-
+                RetVar = GPS_OK;
                 for (Counter2 = 0;
-                        (Counter2 < MAX_INDICATOR_OFFSET) && (CommaCounter < MAX_COMMA_COUNTS);
+                        ((Counter2 < MAX_INDICATOR_OFFSET) && (CommaCounter < MAX_COMMA_COUNTS) && (RetVar == GPS_OK));
                         Counter2++)
                 {
                     if (InputArray[Counter1 + Counter2] == ',')
@@ -210,6 +240,7 @@ GPS_RetType GPS_Parse(uint8_t InputArray[],uint8_t GPRMCData[][GPRMC_DATA_LENGTH
                              * Break the first Loop indicating the Required Data is found.
                              */
                             Counter1--;
+                            RetVar = GPS_OK;
                             break;
                         }
                         else
@@ -219,7 +250,7 @@ GPS_RetType GPS_Parse(uint8_t InputArray[],uint8_t GPRMCData[][GPRMC_DATA_LENGTH
                     }
                     else
                     {
-                        RetVar = GPS_NOK;
+                        /* Do nothing */
                     }
                 }
             }
@@ -231,17 +262,34 @@ GPS_RetType GPS_Parse(uint8_t InputArray[],uint8_t GPRMCData[][GPRMC_DATA_LENGTH
 
         //If the Data is found & ValidFlag
         if(ValidFlag == 1)
-        {   //Copy the Data Contents to another array.
-            for (Counter2 = 0; Counter2 <= GPRMC_DATA_LENGTH; Counter2++)
+        {
+            // Preventing Data to be written on the locked buffer
+            /*
+             * ToDo
+             */
+            //Copy the Data Contents to another array.
+            for (Counter2 = 0; Counter2 < GPRMC_DATA_LENGTH; Counter2++)
             {
                 GPRMCData[GPS_CircularBufferCount][Counter2] = InputArray[Counter1 + Counter2];
             }
-            GPS_CircularBufferCount++;
+
+            //Store the data on a safe place to prevent overWriting
+            for (Counter2 = 0; Counter2 < GPRMC_DATA_LENGTH; Counter2++)
+            {
+                if(GPS_DataLocked == GPS_UNLOCKED)
+                {
+                GPS_Sening_Buff[Counter2] =
+                        GPRMCData[GPS_CircularBufferCount][Counter2];
+
+                }
+            }
+            //Increment the Main Counter
+            GPS_CircularBufferCount ++;
 
             #ifdef DEBUG_MODE
             BlinkLed(20, 6);
             #endif
-
+            //Looping over circular buffer.
             if(GPS_CircularBufferCount == CIRC_BUFF_LENGTH)
             {
                 GPS_CircularBufferCount = 0;
@@ -264,10 +312,21 @@ GPS_RetType GPS_Parse(uint8_t InputArray[],uint8_t GPRMCData[][GPRMC_DATA_LENGTH
 //Call back function to be used on the uart ISR.
 void GPS_ReceptionDone()
 {
-    GPS_DataReceived = 1;
+    GPS_DataReceived = GPS_DATA_RECEIVED;
     GPS_RawDataCircBufferCount ++;
+
 #ifdef DEBUG_MODE
     BlinkLed(20, 0);
 #endif
 
+}
+
+void GPS_DoneSending()
+{
+    //unlock the locked buffer
+
+    BlinkLed(20, 3);
+    // unlock the buffer after sending
+    GPS_DataLocked = GPS_UNLOCKED;
+    Can_Sent = 1;
 }

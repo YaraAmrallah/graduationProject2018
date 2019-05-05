@@ -1,10 +1,10 @@
 #include <stdint.h>
-#include "UART.h"
 #include "DMA.h"
 #include "GPIO.h"
 #include "UART.h"
 #include "M4MemMap.h"
 #include "gps.h"
+#include "CAN_Manager.h"
 
 
 /*ToDo
@@ -36,9 +36,12 @@ int main(void)
     GPIO_SetAlternFuntion(5,1);
     GPIO_SetAlternFuntion(7,1);
     GPIO_SetAlternFuntion(8,1);
+    GPIO_SetAlternFuntion(9,8);
+    GPIO_SetAlternFuntion(10,8);
     DMA_Init();
     UART_Init();
     GPS_Init();
+    CAN_Init();
 
     // waiting for the GPS to warm up.
     delay1ms(100);
@@ -55,42 +58,10 @@ int main(void)
     while(1)
     {
 
-
         GPS_Main_Function_Handling();
-        /*
-            for(i=0;i<3;i++)
-            {
-                GPS_ReqData(UART1);
-            //delay1ms(30);
-            }*/
+        CAN_MainFunction_Handling ();
 
-           /* if(k == GPRMCDataLENGTH || k == 0)
-            {
-            UARTDriverStates[UART0] = 1;
-            UART_StartTransmission(UART0,GPS_DataSentence,GPRMCDataLENGTH);
-            }
-            DIS_INT(6);
-            DIS_INT(46);
-            for(k=0;k<GPRMCDataLENGTH;k++){
-
-                UART_ManageOngoingOperations(UART0);
-
-                //UART_GetNumofTxBytes(UART0, &i);
-
-            }
-            EN_INT(46);
-            EN_INT(6);*/
-
-       /* if((DMAERRCLR & 1) == 1)
-        {
-            BlinkLed(20,0);
-            //clear error
-            interruptErrorHandling();
-        }*/
-
-      //  UART_ManageOngoingOperations(UART1);
     }
-	return 0;
 }
 
 //UART CALLBACKS
