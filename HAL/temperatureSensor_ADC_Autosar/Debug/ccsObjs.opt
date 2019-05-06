@@ -1,0 +1,1 @@
+"./Adc.obj" "./Adc_PBcfg.obj" "./GPIO.obj" "./GPIO_Cfg.obj" "./main.obj" "./tempSensor.obj" "./tempSensor_cfg.obj" "./tm4c123gh6pm_startup_ccs.obj" "../tm4c123gh6pm.cmd" -llibc.a 

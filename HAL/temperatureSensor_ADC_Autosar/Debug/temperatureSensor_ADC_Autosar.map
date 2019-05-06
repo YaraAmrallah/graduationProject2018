@@ -1,0 +1,318 @@
+******************************************************************************
+                  TI ARM Linker PC v18.1.5                     
+******************************************************************************
+>> Linked Mon May  6 23:43:45 2019
+
+OUTPUT FILE NAME:   <temperatureSensor_ADC_Autosar.out>
+ENTRY POINT SYMBOL: "_c_int00_noargs"  address: 00001e9d
+
+
+MEMORY CONFIGURATION
+
+         name            origin    length      used     unused   attr    fill
+----------------------  --------  ---------  --------  --------  ----  --------
+  FLASH                 00000000   00040000  000020fa  0003df06  R  X
+  SRAM                  20000000   00008000  00000322  00007cde  RW X
+
+
+SEGMENT ALLOCATION MAP
+
+run origin  load origin   length   init length attrs members
+----------  ----------- ---------- ----------- ----- -------
+00000000    00000000    00002100   00002100    r-x
+  00000000    00000000    0000026c   0000026c    r-- .intvecs
+  0000026c    0000026c    00001d02   00001d02    r-x .text
+  00001f70    00001f70    00000124   00000124    r-- .const
+  00002098    00002098    00000068   00000068    r-- .cinit
+20000000    20000000    00000324   00000000    rw-
+  20000000    20000000    00000200   00000000    rw- .stack
+  20000200    20000200    000000ae   00000000    rw- .data
+  200002b0    200002b0    00000074   00000000    rw- .bss
+
+
+SECTION ALLOCATION MAP
+
+ output                                  attributes/
+section   page    origin      length       input sections
+--------  ----  ----------  ----------   ----------------
+.intvecs   0    00000000    0000026c     
+                  00000000    0000026c     tm4c123gh6pm_startup_ccs.obj (.intvecs)
+
+.text      0    0000026c    00001d02     
+                  0000026c    00000dc8     Adc.obj (.text)
+                  00001034    00000700     GPIO.obj (.text)
+                  00001734    00000324     tempSensor.obj (.text)
+                  00001a58    00000136     rtsv7M4_T_le_v4SPD16_eabi.lib : fd_div_t2.asm.obj (.text)
+                  00001b8e    000000fc                                   : fd_mul_t2.asm.obj (.text)
+                  00001c8a    0000009c                                   : memcpy_t2.asm.obj (.text)
+                  00001d26    0000006e                                   : fd_tos_t2.asm.obj (.text)
+                  00001d94    00000068                                   : copy_decompress_lzss.c.obj (.text:decompress:lzss:__TI_decompress_lzss)
+                  00001dfc    0000005c     main.obj (.text)
+                  00001e58    00000044     rtsv7M4_T_le_v4SPD16_eabi.lib : autoinit.c.obj (.text:__TI_auto_init_nobinit_nopinit:__TI_auto_init_nobinit_nopinit)
+                  00001e9c    00000038                                   : boot_cortex_m.c.obj (.text:_c_int00_noargs:_c_int00_noargs)
+                  00001ed4    00000038                                   : fs_tod_t2.asm.obj (.text)
+                  00001f0c    0000002e                                   : i_tofd_t2.asm.obj (.text)
+                  00001f3a    00000012                                   : copy_zero_init.c.obj (.text:decompress:ZI:__TI_zero_init_nomemset:__TI_zero_init_nomemset)
+                  00001f4c    0000000e                                   : copy_decompress_none.c.obj (.text:decompress:none:__TI_decompress_none)
+                  00001f5a    0000000c     tm4c123gh6pm_startup_ccs.obj (.text)
+                  00001f66    00000004     rtsv7M4_T_le_v4SPD16_eabi.lib : pre_init.c.obj (.text:_system_pre_init)
+                  00001f6a    00000004                                   : exit.c.obj (.text:abort:abort)
+
+.const     0    00001f70    00000124     
+                  00001f70    00000078     GPIO_Cfg.obj (.const:GPIO_ConfigParam)
+                  00001fe8    00000020     Adc.obj (.const:Adc_SSHandlerPri)
+                  00002008    00000020     Adc.obj (.const:Adc_SSIRQ)
+                  00002028    00000018     GPIO.obj (.const:PortsBaseAddressLut)
+                  00002040    00000014     Adc_PBcfg.obj (.const:Adc_Config)
+                  00002054    00000010     Adc.obj (.const:Adc_SsCtlOffset)
+                  00002064    00000010     Adc.obj (.const:Adc_SsFIFO)
+                  00002074    00000010     Adc.obj (.const:Adc_SsMuxOffset)
+                  00002084    00000008     Adc.obj (.const:Adc_ModuleBaseAddressLut)
+                  0000208c    00000008     tempSensor_cfg.obj (.const:tSensorConfigParam)
+
+.cinit     0    00002098    00000068     
+                  00002098    0000003f     (.cinit..data.load) [load image, compression = lzss]
+                  000020d7    00000001     --HOLE-- [fill = 0]
+                  000020d8    0000000c     (__TI_handler_table)
+                  000020e4    00000004     --HOLE-- [fill = 0]
+                  000020e8    00000008     (.cinit..bss.load) [load image, compression = zero_init]
+                  000020f0    00000010     (__TI_cinit_table)
+
+.init_array 
+*          0    00000000    00000000     UNINITIALIZED
+
+.data      0    20000200    000000ae     UNINITIALIZED
+                  20000200    00000060     Adc_PBcfg.obj (.data:Adc_HwUnitConfig)
+                  20000260    0000001c     Adc_PBcfg.obj (.data:Adc_ChannelGroupConfig)
+                  2000027c    00000008     Adc.obj (.data:Adc_ChannelGroupFinishedSamples)
+                  20000284    00000008     Adc.obj (.data:Adc_ChannelGroupHwUnitId)
+                  2000028c    00000008     Adc.obj (.data:Adc_ChannelGroupNumInputChannel)
+                  20000294    00000008     Adc.obj (.data:Adc_GroupStatus)
+                  2000029c    00000006     GPIO.obj (.data:GPIO_GroupState)
+                  200002a2    00000002     tempSensor.obj (.data:ADC_array)
+                  200002a4    00000004     tempSensor.obj (.data:tSensorReading)
+                  200002a8    00000001     Adc.obj (.data)
+                  200002a9    00000001     tempSensor.obj (.data:countArray)
+                  200002aa    00000001     tempSensor.obj (.data:flag)
+                  200002ab    00000001     tempSensor.obj (.data:statusArray)
+                  200002ac    00000001     tempSensor_cfg.obj (.data:tSensorUpdateFlag)
+                  200002ad    00000001     tempSensor.obj (.data:tempSensorRequest)
+
+.bss       0    200002b0    00000074     UNINITIALIZED
+                  200002b0    00000020     Adc.obj (.bss:Adc_ChannelGroupNotificEnabled)
+                  200002d0    00000020     Adc.obj (.bss:Adc_resultBufferInit)
+                  200002f0    00000020     Adc.obj (.bss:DataBufferPtrAddr)
+                  20000310    00000014     tempSensor.obj (.bss:dataArray)
+
+.stack     0    20000000    00000200     UNINITIALIZED
+                  20000000    00000004     rtsv7M4_T_le_v4SPD16_eabi.lib : boot_cortex_m.c.obj (.stack)
+                  20000004    000001fc     --HOLE--
+
+MODULE SUMMARY
+
+       Module                         code   ro data   rw data
+       ------                         ----   -------   -------
+    .\
+       Adc.obj                        3528   120       129    
+       GPIO.obj                       1792   24        6      
+       tempSensor.obj                 804    0         30     
+       tm4c123gh6pm_startup_ccs.obj   12     620       0      
+       Adc_PBcfg.obj                  0      20        124    
+       GPIO_Cfg.obj                   0      120       0      
+       main.obj                       92     0         0      
+       tempSensor_cfg.obj             0      8         1      
+    +--+------------------------------+------+---------+---------+
+       Total:                         6228   912       290    
+                                                              
+    D:\ti\ccsv8\tools\compiler\ti-cgt-arm_18.1.5.LTS\lib\rtsv7M4_T_le_v4SPD16_eabi.lib
+       fd_div_t2.asm.obj              310    0         0      
+       fd_mul_t2.asm.obj              252    0         0      
+       memcpy_t2.asm.obj              156    0         0      
+       fd_tos_t2.asm.obj              110    0         0      
+       copy_decompress_lzss.c.obj     104    0         0      
+       autoinit.c.obj                 68     0         0      
+       boot_cortex_m.c.obj            56     0         0      
+       fs_tod_t2.asm.obj              56     0         0      
+       i_tofd_t2.asm.obj              46     0         0      
+       copy_zero_init.c.obj           18     0         0      
+       copy_decompress_none.c.obj     14     0         0      
+       exit.c.obj                     4      0         0      
+       pre_init.c.obj                 4      0         0      
+    +--+------------------------------+------+---------+---------+
+       Total:                         1198   0         0      
+                                                              
+       Stack:                         0      0         512    
+       Linker Generated:              0      99        0      
+    +--+------------------------------+------+---------+---------+
+       Grand Total:                   7426   1011      802    
+
+
+LINKER GENERATED COPY TABLES
+
+__TI_cinit_table @ 000020f0 records: 2, size/record: 8, table size: 16
+	.data: load addr=00002098, load size=0000003f bytes, run addr=20000200, run size=000000ae bytes, compression=lzss
+	.bss: load addr=000020e8, load size=00000008 bytes, run addr=200002b0, run size=00000074 bytes, compression=zero_init
+
+
+LINKER GENERATED HANDLER TABLE
+
+__TI_handler_table @ 000020d8 records: 3, size/record: 4, table size: 12
+	index: 0, handler: __TI_decompress_lzss
+	index: 1, handler: __TI_decompress_none
+	index: 2, handler: __TI_zero_init
+
+
+GLOBAL SYMBOLS: SORTED ALPHABETICALLY BY Name 
+
+address   name                            
+-------   ----                            
+00000975  ADC0SS0_Handler                 
+00000a45  ADC0SS1_Handler                 
+00000b19  ADC0SS2_Handler                 
+00000be5  ADC0Seq3_Handler                
+00000cc5  ADC1SS0_Handler                 
+00000d95  ADC1SS1_Handler                 
+00000e69  ADC1SS2_Handler                 
+00000f39  ADC1SS3_Handler                 
+20000260  Adc_ChannelGroupConfig          
+00002040  Adc_Config                      
+00000749  Adc_DisableGroupNotification    
+00000605  Adc_EnableGroupNotification     
+00000489  Adc_GetGroupStatus              
+20000200  Adc_HwUnitConfig                
+0000026d  Adc_Init                        
+000003db  Adc_ReadGroup                   
+0000034d  Adc_SetupResultBuffer           
+0000037d  Adc_StartGroupConversion        
+000003d9  Adc_StopGroupConversion         
+00001f6b  C$$EXIT                         
+0000162f  GPIO_ClrInterruptFlag           
+00001f70  GPIO_ConfigParam                
+00001681  GPIO_GetInterruptStatus         
+00001035  GPIO_Init                       
+000012c7  GPIO_Read                       
+0000134d  GPIO_SetAlternFuntion           
+000013d5  GPIO_SetInterruptEvent          
+0000124d  GPIO_Write                      
+00001f5b  ResetISR                        
+20000200  __STACK_END                     
+00000200  __STACK_SIZE                    
+20000200  __STACK_TOP                     
+000020f0  __TI_CINIT_Base                 
+00002100  __TI_CINIT_Limit                
+000020d8  __TI_Handler_Table_Base         
+000020e4  __TI_Handler_Table_Limit        
+00001e59  __TI_auto_init_nobinit_nopinit  
+00001d95  __TI_decompress_lzss            
+00001f4d  __TI_decompress_none            
+ffffffff  __TI_pprof_out_hndl             
+ffffffff  __TI_prof_data_size             
+ffffffff  __TI_prof_data_start            
+00000000  __TI_static_base__              
+00001f3b  __TI_zero_init_nomemset         
+00001d27  __aeabi_d2f                     
+00001a59  __aeabi_ddiv                    
+00001b8f  __aeabi_dmul                    
+00001ed5  __aeabi_f2d                     
+00001f0d  __aeabi_i2d                     
+00001c8b  __aeabi_memcpy                  
+00001c8b  __aeabi_memcpy4                 
+00001c8b  __aeabi_memcpy8                 
+ffffffff  __binit__                       
+ffffffff  __c_args__                      
+UNDEFED   __mpu_init                      
+20000000  __stack                         
+00001e9d  _c_int00_noargs                 
+UNDEFED   _system_post_cinit              
+00001f67  _system_pre_init                
+00001f6b  abort                           
+ffffffff  binit                           
+00000000  g_pfnVectors                    
+00001dfd  main                            
+00001c8b  memcpy                          
+0000208c  tSensorConfigParam              
+200002ac  tSensorUpdateFlag               
+000017cb  tempSensor_DisableStateRequest  
+000017b5  tempSensor_EnableStateRequest   
+00001735  tempSensor_Initialization       
+000017eb  tempSensor_MainFunction_Handling
+00001a09  tempSensor_ReturnState          
+
+
+GLOBAL SYMBOLS: SORTED BY Symbol Address 
+
+address   name                            
+-------   ----                            
+00000000  __TI_static_base__              
+00000000  g_pfnVectors                    
+00000200  __STACK_SIZE                    
+0000026d  Adc_Init                        
+0000034d  Adc_SetupResultBuffer           
+0000037d  Adc_StartGroupConversion        
+000003d9  Adc_StopGroupConversion         
+000003db  Adc_ReadGroup                   
+00000489  Adc_GetGroupStatus              
+00000605  Adc_EnableGroupNotification     
+00000749  Adc_DisableGroupNotification    
+00000975  ADC0SS0_Handler                 
+00000a45  ADC0SS1_Handler                 
+00000b19  ADC0SS2_Handler                 
+00000be5  ADC0Seq3_Handler                
+00000cc5  ADC1SS0_Handler                 
+00000d95  ADC1SS1_Handler                 
+00000e69  ADC1SS2_Handler                 
+00000f39  ADC1SS3_Handler                 
+00001035  GPIO_Init                       
+0000124d  GPIO_Write                      
+000012c7  GPIO_Read                       
+0000134d  GPIO_SetAlternFuntion           
+000013d5  GPIO_SetInterruptEvent          
+0000162f  GPIO_ClrInterruptFlag           
+00001681  GPIO_GetInterruptStatus         
+00001735  tempSensor_Initialization       
+000017b5  tempSensor_EnableStateRequest   
+000017cb  tempSensor_DisableStateRequest  
+000017eb  tempSensor_MainFunction_Handling
+00001a09  tempSensor_ReturnState          
+00001a59  __aeabi_ddiv                    
+00001b8f  __aeabi_dmul                    
+00001c8b  __aeabi_memcpy                  
+00001c8b  __aeabi_memcpy4                 
+00001c8b  __aeabi_memcpy8                 
+00001c8b  memcpy                          
+00001d27  __aeabi_d2f                     
+00001d95  __TI_decompress_lzss            
+00001dfd  main                            
+00001e59  __TI_auto_init_nobinit_nopinit  
+00001e9d  _c_int00_noargs                 
+00001ed5  __aeabi_f2d                     
+00001f0d  __aeabi_i2d                     
+00001f3b  __TI_zero_init_nomemset         
+00001f4d  __TI_decompress_none            
+00001f5b  ResetISR                        
+00001f67  _system_pre_init                
+00001f6b  C$$EXIT                         
+00001f6b  abort                           
+00001f70  GPIO_ConfigParam                
+00002040  Adc_Config                      
+0000208c  tSensorConfigParam              
+000020d8  __TI_Handler_Table_Base         
+000020e4  __TI_Handler_Table_Limit        
+000020f0  __TI_CINIT_Base                 
+00002100  __TI_CINIT_Limit                
+20000000  __stack                         
+20000200  Adc_HwUnitConfig                
+20000200  __STACK_END                     
+20000200  __STACK_TOP                     
+20000260  Adc_ChannelGroupConfig          
+200002ac  tSensorUpdateFlag               
+ffffffff  __TI_pprof_out_hndl             
+ffffffff  __TI_prof_data_size             
+ffffffff  __TI_prof_data_start            
+ffffffff  __binit__                       
+ffffffff  __c_args__                      
+ffffffff  binit                           
+UNDEFED   __mpu_init                      
+UNDEFED   _system_post_cinit              
+
+[71 symbols]
