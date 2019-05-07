@@ -2,7 +2,8 @@
 #include "I2C2.h"
 #include "I2C2_Cfg.h"
 #define I2CS_NUMBER 4u
-
+void delay100ms(uint64_t time);
+void BlinkLed(uint8_t period,uint8_t groupId);
 
 void I2C_Init2(void)
 {
@@ -24,7 +25,8 @@ void I2C_Init2(void)
             //RCGC_I2C |= 1<<I2CID;
 			I2CRCGC |= (((uint32_t)1) <<I2CID);
             I2CMCR(I2CID) |= MASTER;                 /*Enable as a Master*/
-            I2CMTPR(I2CID) |= TPR_Calculator(MAX_SCL_FREQUENCY_SM); /*****************************Clock*****************************/
+            I2CMTPR(I2CID) |= (1<<7);
+            I2CMTPR(I2CID) |= TPR_Calculator(MAX_SCL_FREQUENCY_FM); /*****************************Clock*****************************/
         }else
         {
          /*Misra*/
@@ -40,21 +42,9 @@ void I2C_Init2(void)
  ******************************************************************************
  */
 
-uint8_t I2C_Send(uint8_t I2CID, uint8_t Slave_address, uint8_t* Data)
+uint8_t I2C_Send(uint8_t I2CID, uint8_t Slave_address, uint8_t* Data, uint8_t datacount)
 {
 	/*data is passed as array*/
-    int loop;//iteration to loob
-    int datacount=0;
-    int w=0;//variable to increase the datacount
-    for(loop=0;;loop++)/*loop till the if condition is satisfied and it will get you out ,we do this to count the data*/
-        {
-            datacount=w+1;
-            w++;
-            if(*(Data+loop+1)=='\0')
-            {
-                break;
-            }
-        }
 
     if(datacount == 1)//single send
         {
@@ -68,7 +58,12 @@ uint8_t I2C_Send(uint8_t I2CID, uint8_t Slave_address, uint8_t* Data)
             while(I2CMCS(I2CID) & 0x40); /*Check on the bus busy flag*/
             error = I2CMCS(I2CID) & 0xE; /*returns 1 if any of these bits are equal 1 (Error || DataAcknowledge || ADress Acknowledge)*/
 
-            if (error) return error;
+            if (error)
+                {
+                BlinkLed(8,0);
+                }
+            else{BlinkLed(15,4);}
+            return error;
         
 		}
 		else
@@ -110,7 +105,7 @@ uint8_t I2C_Receive(uint8_t I2CID, uint8_t Slave_address, uint8_t Datacount, uin
     volatile  uint8_t error=0;
 
     if (Datacount <= 0)
-    return -1; /* no read was performed */
+    return 1; /* no read was performed */
 
     I2C_SlaveADD_send(I2CID,Slave_address,READ); /* set slave address and read mode */
 
@@ -125,7 +120,9 @@ uint8_t I2C_Receive(uint8_t I2CID, uint8_t Slave_address, uint8_t Datacount, uin
 
     while(I2CMCS(I2CID) & 1);    /*Checks if the I2C Master still busy*/
     error = I2CMCS(I2CID) & 0xE; /*returns 1 if any of these bits are equal 1 (Error || DataAcknowledge || ADress Acknowledge)*/
-    if (error) return error;
+    if (error){BlinkLed(8,0);}
+    else{ BlinkLed(1,3);}
+    return error;
 
     I2C_READ_DATA(I2CID,Data); /* store the Data received */
 
@@ -249,7 +246,8 @@ uint8_t I2C_FastSend(uint8_t I2CID, uint8_t Slave_address, uint8_t Data)
     while(I2CMCS(I2CID) & 0x40); /*Check on the bus busy flag*/
     error = I2CMCS(I2CID) & 0xE; /*returns 1 if any of these bits are equal 1 (Error || DataAcknowledge || ADress Acknowledge)*/
 
-    if (error)return error;
+    if (error)
+     return error;
 }
 /*void I2CSend_Array(uint8_t I2CID, uint8_t Slave_address, uint8_t* Data)
 {
@@ -281,4 +279,27 @@ uint8_t I2C_FASTReceive(uint8_t I2CID, uint8_t Slave_address, uint8_t* Data)
 
     if (error) return error;
     return 0;
+}
+
+void delay100ms(uint64_t time){
+    unsigned long i;
+    while(time>0){
+        i=133333;
+        while(i>0){
+            i--;
+        }
+        time--;
+    }
+}
+
+
+
+void BlinkLed(uint8_t period,uint8_t groupId){
+    if(groupId<6){
+    GPIO_Write(groupId,0xff);
+    delay100ms(period);
+    GPIO_Write(groupId,0x00);
+    delay100ms(period);
+
+    }
 }

@@ -2,7 +2,8 @@
 #ifndef I2C2_H_
 #define I2C2_H_
 #include <stdint.h>
-
+#include "tm4c123gh6pm.h"
+#include "GPIO.h"
 
 typedef volatile uint32_t* const I2C_RegAddType;
 typedef volatile uint32_t* const GPIO_RegAddType;
@@ -14,7 +15,6 @@ typedef volatile uint32_t* const GPIO_RegAddType;
 #define PORTD_BASE_ADDRESS 0x40007000
 #define PORTE_BASE_ADDRESS 0x40024000
 #define PORTF_BASE_ADDRESS 0x40025000
-
 #define RCGC_BASE_ADDRESS  0x400FE000
 #define PORTS_NUMBER 6u
 /*Base Address of Ports*/
@@ -161,7 +161,7 @@ typedef struct
 }I2C_Mode;
 
 void I2C_Init2(void);
-uint8_t I2C_Send(uint8_t I2CID, uint8_t Slave_address, uint8_t* Data);
+uint8_t I2C_Send(uint8_t I2CID, uint8_t Slave_address, uint8_t* Data,uint8_t datacount);
 uint8_t I2C_Receive(uint8_t I2CID, uint8_t Slave_address, uint8_t Datacount, uint8_t* Data);
 uint8_t I2C_Quick_Receive(uint8_t I2CID, uint8_t Slave_address, uint8_t* Data);
 uint8_t TPR_Calculator(uint32_t Clk);

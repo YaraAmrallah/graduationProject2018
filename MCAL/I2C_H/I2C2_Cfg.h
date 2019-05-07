@@ -6,7 +6,7 @@
 #include "I2C2.h"
 #define I2CMODS_NUM 4u
 #define I2C_PCTL_VAL 3u
-#define Clk 100000
+#define Clk 400000
 #define I2Cs_NUM 1u /*Number of I2Cs you need*/
 const I2C_Mode I2CMOD_Data[I2CMODS_NUM]=
 {
