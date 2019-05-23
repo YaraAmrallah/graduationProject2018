@@ -25,7 +25,10 @@ void MPU_CallBack(void)
 
 int main(void)
 {
-
+    GPIO_Init();
+    I2C_Init();
+    mpu6050_init();
+    MPUManager_Init();
     while (1)
     {
         if (MPU_Flag == MPU_DONE)
