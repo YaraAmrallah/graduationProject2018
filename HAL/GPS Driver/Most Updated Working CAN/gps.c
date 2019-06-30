@@ -16,7 +16,8 @@
 #define CIRC_BUFF_LENGTH            8
 #define RAWDATA_CIRC_BUFF_LENGTH    2
 
-
+extern uint8_t StartFlag;
+extern uint8_t EndFlag;
 
 /*------------------------------------------- Circular Buffer -------------------------------------------*/
 uint8_t GPS_CircularBufferCount = 0;
@@ -147,7 +148,7 @@ void GPS_Main_Function_Handling()
                    case GPS_DONE_PARSING:
                        //Lock the buffer from changing Data
                        GPS_DataLocked = GPS_LOCKED;
-                       if(Can_Sent == 1)
+                       if((Can_Sent == 1) && (StartFlag == 1) && (EndFlag == 0))
                        {
                        AsyncTxData_Request(0,GPS_Sening_Buff);
                        Can_Sent = 0;
@@ -316,12 +317,12 @@ void GPS_ReceptionDone()
     GPS_RawDataCircBufferCount ++;
 
 #ifdef DEBUG_MODE
-    BlinkLed(20, 0);
+    //BlinkLed(20, 0);
 #endif
 
 }
 
-void GPS_DoneSending()
+void GPS_DoneSending(void)
 {
     //unlock the locked buffer
 

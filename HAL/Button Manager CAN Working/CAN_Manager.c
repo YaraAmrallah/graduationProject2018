@@ -6,7 +6,8 @@
  */
 
 #include "CAN_Manager.h"
-#include "UART.h"
+#include "GPIO.h"
+
 
 /*------------------------------------------------- Global Variables ----------------------------------------------*/
 
@@ -28,10 +29,7 @@ uint8_t pendingFlag[CAN_MODULES_GROUPS_NUMBER] = {0};
 
 void CAN_MainFunction_Handling ()
 {
-
-
     uint8_t loopIndex;
-    uint8_t i = 0;
 
     for(loopIndex = 0; loopIndex < CAN_MODULES_GROUPS_NUMBER; loopIndex++)
     {
@@ -42,6 +40,7 @@ void CAN_MainFunction_Handling ()
         {
 
         case idle:
+
             if(configPtr->messageObjectType == transfer)
             {
                 if ((updateDataArray[loopIndex] == 1) && (requestFlag[loopIndex] == 1))
@@ -75,6 +74,10 @@ void CAN_MainFunction_Handling ()
                 if(newDataFlag(configPtr->unitId, configPtr->messageObjectNumber) == 1)
                 {
                     newDataRecFlag[loopIndex] = 1;
+                    mConfigPtr->dataReceivedPointer();
+                   // GPIO_Write(3,0xff);
+
+
                 }
                 else
                 {
@@ -101,18 +104,13 @@ void CAN_MainFunction_Handling ()
                     {
                         if(txRequestFlag(configPtr->unitId, configPtr->messageObjectNumber) == 0)
                         {
-
                             dataLength[loopIndex] = dataLength[loopIndex] - configPtr->dataLengthCode;
-
-
                             CAN_Write_TX (mConfigPtr->objectID, (moduleDataArray[loopIndex] + incrementValue[loopIndex]));
-
-
-
                             incrementValue[loopIndex] += configPtr->dataLengthCode;
-                            //GPIO_Write(3,0xff);
-                            //  GPIO_Write(3,0x00);
 
+
+                            //GPIO_Write(3,0xff);
+                            //GPIO_Write(3,0x00);
                         }
                         else
                         {
@@ -129,35 +127,25 @@ void CAN_MainFunction_Handling ()
                         {
                             /* do noting */
                         }
-
                     }
                 }
                 else
                 {
-
-                    /*----------------------------------------------------------------*/
                     if(pendingFlag[loopIndex] == 0)
                     {
-
                         dataLength[loopIndex] = dataLength[loopIndex] - configPtr->dataLengthCode;
                         CAN_Write_TX (mConfigPtr->objectID, moduleDataArray[loopIndex] + incrementValue[loopIndex]);
-
 
                         if(txRequestFlag(configPtr->unitId, configPtr->messageObjectNumber) == 0)
                         {
                             pendingFlag[loopIndex] = 0;
-
-
-
                             doneFlag[loopIndex] = 1;
                             requestFlag[loopIndex] = 0;
                             updateDataArray[loopIndex] = 0;
                             incrementValue[loopIndex]=0;
 
-
                             if (mConfigPtr->callBackPtrEnable == enable)
                             {
-                                //GPIO_Write(3, 0xFF);
                                 mConfigPtr->donePointer();
                             }
                             else
@@ -166,7 +154,6 @@ void CAN_MainFunction_Handling ()
                             }
 
                             CAN_StatesArray[loopIndex] = idle;
-
                         }
                         else
                         {
@@ -179,19 +166,10 @@ void CAN_MainFunction_Handling ()
                         if(txRequestFlag(configPtr->unitId, configPtr->messageObjectNumber) == 0)
                         {
                             pendingFlag[loopIndex] = 0;
-
-
-
                             doneFlag[loopIndex] = 1;
                             requestFlag[loopIndex] = 0;
                             updateDataArray[loopIndex] = 0;
                             incrementValue[loopIndex]=0;
-
-
-
-
-
-
 
                             if (mConfigPtr->callBackPtrEnable == enable)
                             {
@@ -203,18 +181,14 @@ void CAN_MainFunction_Handling ()
                             }
 
                             CAN_StatesArray[loopIndex] = idle;
-
                         }
                         else
                         {
                             /* do nothing */
                             pendingFlag[loopIndex] = 1;
                         }
-
                     }
-
                 }
-
             }
             else if ((updateDataArray[loopIndex] == 0) && (requestFlag[loopIndex] == 1))
             {
@@ -231,50 +205,36 @@ void CAN_MainFunction_Handling ()
                         /* do nothing */
                     }
                     CAN_StatesArray[loopIndex] = idle;
-
                 }
                 else
                 {
                     /* do nothing */
                 }
-
             }
-
 
             break;
 
         case rxRequest:
 
-
             if(dataLength[loopIndex] > configPtr->dataLengthCode)
             {
-
-
                 if(newDataFlag(configPtr->unitId, configPtr->messageObjectNumber) == 1)
                 {
-
                     dataLength[loopIndex] = dataLength[loopIndex] - configPtr->dataLengthCode;
-
                     CAN_RX (mConfigPtr->objectID, (moduleDataArray[loopIndex] + incrementValue[loopIndex]));
-
                     incrementValue[loopIndex] += configPtr->dataLengthCode;
-
-
                 }
                 else
                 {
-
+                    /* do nothing */
                 }
             }
             else
             {
                 if(newDataFlag(configPtr->unitId, configPtr->messageObjectNumber) == 1)
                 {
-
                     dataLength[loopIndex] = dataLength[loopIndex] - configPtr->dataLengthCode;
                     CAN_RX (mConfigPtr->objectID, moduleDataArray[loopIndex] + incrementValue[loopIndex]);
-
-
                     doneFlag[loopIndex] = 1;
                     requestFlag[loopIndex]=0;
                     incrementValue[loopIndex]=0;
@@ -287,32 +247,22 @@ void CAN_MainFunction_Handling ()
                     {
                         /* do nothing */
                     }
-                    CAN_StatesArray[loopIndex] = idle;
 
+                    CAN_StatesArray[loopIndex] = idle;
                 }
                 else
                 {
                     /* do nothing */
                 }
-
             }
-
-            /*----------------------------------------------------------------------------------------------------------*/
-
-
         }
     }
-
 }
-
-// data frame length el mafroud tetzabat fel transmit, flag fel main y decrement by 8 le7ad ma yewsal l zero, wa2taha yewa2af el transmission,
-// w momken neshouf el FIFO buffer, w wa2t ma n5alas ne3mel el done flag aw el call back function, yeb2a awel 7aga a check 3l length
-
 
 
 void AsyncTxData_Request(uint8_t moduleId,uint8_t * DataPtr)
 {
-    if (dataLength[moduleId] == 0)
+    if ((dataLength[moduleId] == 0) && (pendingFlag[moduleId] == 0))
     {
         requestFlag[moduleId] = 1;
         updateDataArray[moduleId] = 1;
@@ -341,8 +291,15 @@ void AsyncTx_Request(uint8_t moduleId)
 
 void AsyncRxData_Request(uint8_t moduleId,uint8_t * DataPtr)
 {
-    requestFlag[moduleId] = 1;
-    moduleDataArray[moduleId] = DataPtr;
-    dataLength[moduleId] = CAN_Manager_configParameters[moduleId].dataFrameLength;
+    if ((dataLength[moduleId] == 0)  && (pendingFlag[moduleId] == 0))
+    {
+        requestFlag[moduleId] = 1;
+        moduleDataArray[moduleId] = DataPtr;
+        dataLength[moduleId] = CAN_Manager_configParameters[moduleId].dataFrameLength;
+    }
+    else
+    {
+        /* do nothing */
+    }
 
 }

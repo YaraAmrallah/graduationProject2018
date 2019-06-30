@@ -26,7 +26,7 @@
 #define AUTO_RETRANSMISSION  ENABLE
 
 /* Define message objects number */
-#define TOTAL_MESSAGE_OBJECT_NUMBER 4u
+#define TOTAL_MESSAGE_OBJECT_NUMBER 7u
 
 /* Define maximum message object number */
 /* N.B. The total number of message objects should not exceed 32. */

@@ -449,177 +449,6 @@ static uint8_t CAN_MessageObjectsConfig()
     return errorFlag ;
 }
 
-/*-----------------------------------------------------------------------------------------------------------------------------------*/
-
-static uint8_t CAN_ReservedObjectsConfig()
-{
-    uint8_t errorFlag = 0;
-    uint8_t loopIndex;
-    uint16_t tempID;
-    const CAN_MessageObject_cfgType * CfgPtr;
-
-    for (loopIndex = 0; loopIndex < RESERVED_OBJECTS_NUMBER; loopIndex++)
-    {
-        CfgPtr = &CAN_ReservedObject_configParameters[loopIndex];
-
-        /* Check for user's input */
-        if((CfgPtr->unitId== CAN0) || (CfgPtr->unitId == CAN1))
-        {
-            if ((CfgPtr->messageObjectType == transfer) || (CfgPtr->messageObjectType == receive))
-            {
-                /* momken neb2a ngama3hom fel a5er b hexadecimal no */
-                /* Transfer the data in the CANIFn registers to the CAN message object.*/
-                /* Clear the register from previous configurations */
-                CAN_IFnCMSK(CfgPtr->unitId,CfgPtr->messageObjectType) &= ~(0xFF);
-
-                /* Enable WRNRD bit to transfer data from interface registers to the message object to be specified by MNUM */
-                CAN_IFnCMSK(CfgPtr->unitId,CfgPtr->messageObjectType) |= 1 << 7;
-
-                /* Transfer Mask, arbitration, and control bits */
-                CAN_IFnCMSK(CfgPtr->unitId,CfgPtr->messageObjectType) |= 1 << 5; /* ARB */
-                CAN_IFnCMSK(CfgPtr->unitId,CfgPtr->messageObjectType) |= 1 << 4; /* CONTROL */
-                // CAN_IFnCMSK(CfgPtr->unitId,CfgPtr->messageObjectType) &= ~(1 << 2);
-
-                /* WHICH DATA BYTES TO ACCESS */ /* REVIEW THIS */
-                CAN_IFnCMSK(CfgPtr->unitId,CfgPtr->messageObjectType) |= 1 << 1; /* DATAA */
-                CAN_IFnCMSK(CfgPtr->unitId,CfgPtr->messageObjectType) |= 1 << 0; /* DATAB */
-
-                /* Enable/Disable Mask */
-                if (CfgPtr->enableMSK == enable)
-                {
-                    /* Access Mask Bits */
-                    CAN_IFnCMSK(CfgPtr->unitId,CfgPtr->messageObjectType) |= 1 << 6; /* MASK */
-                    /* Use Acceptance Mask */
-                    CAN_IFnMCTL (CfgPtr->unitId,CfgPtr->messageObjectType) |= 1 << 12; /* UMASK */
-
-                    /* Use the proper mask identifier size and assign them to the registers */
-                    if (CAN_MessageObject_configParameters[loopIndex].maskIdSize == stdId)
-                    {
-                        /* Reset the register */
-                        CAN_IFnMSK1(CfgPtr->unitId,CfgPtr->messageObjectType) |= 0xFFFF;
-                        /* Clear bits 12:2 */
-                        CAN_IFnMSK2(CfgPtr->unitId,CfgPtr->messageObjectType) &= (0xFFFF0003);
-                        /* Update the 12:2 bits with the mask ID */
-                        CAN_IFnMSK2(CfgPtr->unitId,CfgPtr->messageObjectType) |= (CfgPtr->maskID) << 2;
-                    }
-                    else if (CfgPtr->maskIdSize == extendedId)
-                    {
-                        /* Take the LSBs of the Mask */
-                        tempID = (CfgPtr->maskID & 0x0000FFFF);
-                        /* Reset the register */
-                        CAN_IFnMSK1(CfgPtr->unitId,CfgPtr->messageObjectType) &= 0x0000;
-                        /* Update the register with the 16 LSBs */
-                        CAN_IFnMSK1(CfgPtr->unitId,CfgPtr->messageObjectType) |= tempID;
-                        /* Take the MSBs of the mask and shift them right */
-                        tempID = (CfgPtr->maskID & 0xFFFF0000) >> 16;
-                        /* Reset the register */
-                        CAN_IFnMSK2(CfgPtr->unitId,CfgPtr->messageObjectType) &= ~(0xFFFF);
-                        /* Update the register with the 16 MSBs of the mask */
-                        CAN_IFnMSK2(CfgPtr->unitId,CfgPtr->messageObjectType) |= tempID;
-                        /* Use the Mask extended ID for acceptance filtering */
-                        CAN_IFnMSK2(CfgPtr->unitId,CfgPtr->messageObjectType) |= CfgPtr->enableMaskExtID << 15; /* MXTD */
-                    }
-
-                    else
-                    {
-                        errorFlag++;
-                    }
-
-                    /* Use/Don't use mask direction and mask extended identifier bits in acceptance filtering */
-                    CAN_IFnMSK2(CfgPtr->unitId,CfgPtr->messageObjectType) |= CfgPtr->enableMaskMessageDirection << 14; /* MDIR */
-
-                }
-                else if (CfgPtr->enableMSK == disable)
-                {
-                    /* Do not use the Acceptance Mask */
-                    CAN_IFnMCTL(CfgPtr->unitId,CfgPtr->messageObjectType) &= ~(1 << 12); /* UMASK */
-                }
-                else
-                {
-                    errorFlag++;
-                }
-
-                /* Set message object identifier */
-                if(CAN_MessageObject_configParameters[loopIndex].IdSize == stdId)
-                {
-                    CAN_IFnARB2(CfgPtr->unitId,CfgPtr->messageObjectType) = 0x0000;
-                    CAN_IFnARB2(CfgPtr->unitId,CfgPtr->messageObjectType) = (CfgPtr->messageObjectID) << 2;
-                    CAN_IFnARB2(CfgPtr->unitId,CfgPtr->messageObjectType) &= ~(1 << 14);
-                }
-                else if (CAN_MessageObject_configParameters[loopIndex].IdSize == extendedId)
-                {
-                    tempID = (CAN_MessageObject_configParameters[loopIndex].messageObjectID & 0x0000FFFF);
-                    CAN_IFnARB1(CfgPtr->unitId,CfgPtr->messageObjectType) = tempID;
-                    tempID = (CfgPtr->messageObjectID & 0xFFFF0000) >> 16;
-                    CAN_IFnARB2(CfgPtr->unitId,CfgPtr->messageObjectType) = tempID;
-                    CAN_IFnARB2(CfgPtr->unitId,CfgPtr->messageObjectType) |= 1 << 14;
-                }
-                else
-                {
-                    errorFlag++;
-                }
-
-                /* Set the direction of the message object */
-                if (CfgPtr->messageObjectType == transfer)
-                {
-                    CAN_IFnARB2(CfgPtr->unitId,CfgPtr->messageObjectType) |= 1 << 13; /* DIR */
-                }
-                else
-                {
-                    CAN_IFnARB2(CfgPtr->unitId,CfgPtr->messageObjectType) &= ~(1 << 13);
-                }
-
-
-                /* Set the validity of the message object */
-                CAN_IFnARB2(CfgPtr->unitId,CfgPtr->messageObjectType) &= ~(1 << 15);
-                CAN_IFnARB2(CfgPtr->unitId,CfgPtr->messageObjectType) |= CAN_MessageObject_configParameters[loopIndex].messageValidity << 15; /* MSGVAL */
-
-                /* Remote enable/Disable */
-                if(CfgPtr->messageObjectType == transfer)
-                {
-                    CAN_IFnMCTL(CfgPtr->unitId,CfgPtr->messageObjectType) &= ~(1<< 9);
-                    CAN_IFnMCTL(CfgPtr->unitId,CfgPtr->messageObjectType) |= CfgPtr->remoteEnable << 9; /*RMTEN */
-                }
-                else
-                {
-                    /* do nothing */
-                }
-
-                /* End of buffer enable/Disable */
-                CAN_IFnMCTL(CfgPtr->unitId,CfgPtr->messageObjectType) &= ~(1<< 7);
-                CAN_IFnMCTL(CfgPtr->unitId,CfgPtr->messageObjectType) |= CfgPtr->endOfBuffer << 7; /* EOB */
-
-                /* Specify the number of bytes in the data frame */
-                if(CfgPtr->dataLengthCode <= 8)
-                {
-                    CAN_IFnMCTL(CfgPtr->unitId,CfgPtr->messageObjectType) &= ~(0xF);
-                    CAN_IFnMCTL(CfgPtr->unitId,CfgPtr->messageObjectType) |= CfgPtr->dataLengthCode;
-                }
-                else
-                {
-                    errorFlag++;
-                }
-
-                /* Set Message Object Number */
-                if ((CfgPtr->messageObjectNumber >= 3) && (CfgPtr->messageObjectNumber <= 30))
-                {
-                    CAN_IFnCRQ(CfgPtr->unitId,CfgPtr->messageObjectType) = CfgPtr->messageObjectNumber;
-                }
-                else
-                {
-                    errorFlag++;
-                }
-            }
-        }
-        else
-        {
-            errorFlag++;
-        }
-    }
-
-    return errorFlag ;
-}
-
 /*--------------------------------------------------------------------------------------------------------------------------------*/
 
 
@@ -668,6 +497,7 @@ void  CAN_Write_TX (uint8_t MessageObject_configID, uint8_t* DataPtr)
         /* do nothing */
     }
     while(CAN_IFnCRQ(CfgPtr->unitId,CfgPtr->messageObjectType) & 0x00008000);
+
 
 
 }
@@ -805,6 +635,7 @@ void  CAN_RX (uint8_t MessageObject_configID, uint8_t *DataPtr)
                 *(DataPtr + loopIndex) = (uint8_t)( tempData >>(8*byteShift));
             }
 
+            /***-----------------------------------------------------------------------*/
 
 
         }
@@ -862,11 +693,9 @@ uint8_t newDataFlag(CANUnitId CAN_UnitID, uint8_t messageObjectNumber)
 
 uint8_t txRequestFlag(CANUnitId CAN_UnitID, uint8_t messageObjectNumber)
 {
-    uint8_t test;
     if (messageObjectNumber <= 16)
     {
-
-        return ((CAN_TXRQn(CAN_UnitID,0) >> (messageObjectNumber - 1)) & 0x01 );
+        return ((CAN_TXRQn(CAN_UnitID,0) >> (messageObjectNumber - 1)) & 0x01);
 
     }
     else

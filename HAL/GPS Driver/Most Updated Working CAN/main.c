@@ -7,24 +7,18 @@
 #include "CAN_Manager.h"
 
 
-/*ToDo
- * GPS extern and # define - > to be deleted*/
-
-
-uint8_t Data[1024];
-uint8_t DMA[1024];
-uint32_t i=0, k =0;
-
-extern uint8_t GPSRawData[TOTAL_ARR_LENGTH];
-extern uint8_t GPS_DataSentence[GPRMC_DATA_LENGTH];
-extern uint8_t UARTDriverStates[USED_UART_MODULES];
 
 
 void BlinkLed(uint8_t period,uint8_t groupId);
+void nullFunction(void);
+void START_Notify(void);
 
-#define DMAERRCLR          (*(volatile  uint32_t* const)(0x400FF000 + 0x04C))
+uint8_t StartFlag = 0;
+uint8_t EndFlag = 0;
 
 void delay1ms(uint64_t time);
+
+uint8_t dummyBuffer[8]={0};
 
 int main(void)
 {
@@ -44,12 +38,7 @@ int main(void)
     // waiting for the GPS to warm up.
     delay1ms(100);
 
-    //DMA_StartChannel(0,0x4000D000,(uint32_t)(DMA + 1023), 1024);
 
-    //UART_StartReceiving(UART1,Data,1024);
-    //UART_StartReceiving(UART0,Data,1024);
-    //UART_StartTransmission(UART0,Data,1024);
-    //BlinkLed(20,0);
 
 
 
@@ -107,4 +96,25 @@ void testISR()
 {
     BlinkLed(200,0);
 
+}
+
+void START_Notify(void)
+{
+    BlinkLed(20,0);
+    StartFlag = 1;
+    EndFlag = 0;
+    AsyncRxData_Request(1, dummyBuffer);
+}
+
+void nullFunction(void)
+{
+     '\0';
+}
+
+void END_Notify(void)
+{
+    BlinkLed(255,0);
+    EndFlag = 1;
+    StartFlag = 0;
+    AsyncRxData_Request(2, dummyBuffer);
 }

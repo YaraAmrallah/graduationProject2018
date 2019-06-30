@@ -11,9 +11,8 @@
 #include "CAN.h"
 #include "CAN_M_Cfg.h"
 
-
 typedef enum {idle = 0, updateRequest, txRequest, rxRequest}CAN_StateType;
-typedef  void (*CAN_CallBackPtr)(void);
+typedef void (*CAN_CallBackPtr)(void);
 
 
 typedef struct
@@ -34,7 +33,12 @@ typedef struct
 
     uint8_t dataFrameLength;
 
+    /* Receiver call back function */
+
+    CAN_CallBackPtr dataReceivedPointer;
+
 } CAN_Manager_cfgType;
+
 
 extern const CAN_Manager_cfgType CAN_Manager_configParameters[CAN_MODULES_GROUPS_NUMBER];
 //extern uint8_t  doneFlag[CAN_MODULES_GROUPS_NUMBER];

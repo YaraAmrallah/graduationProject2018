@@ -8,7 +8,7 @@
 #ifndef CAN_M_CFG_H_
 #define CAN_M_CFG_H_
 
-#define CAN_MODULES_GROUPS_NUMBER 1u
+#define CAN_MODULES_GROUPS_NUMBER 7u
 
 
 
