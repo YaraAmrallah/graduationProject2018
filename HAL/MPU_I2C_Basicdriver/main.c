@@ -26,6 +26,8 @@ void MPU_CallBack(void)
 int main(void)
 {
     GPIO_Init();
+    GPIO_SetAlternFuntion(5, 3);
+    GPIO_SetAlternFuntion(6, 3);
     I2C_Init();
     mpu6050_init();
     MPUManager_Init();

@@ -148,10 +148,14 @@ static void MPU_GETDATA(void)
 
     // 3. Accelerometer angle calculations
 
-    Acc_total_vector = sqrt((Acc_x * Acc_x) + (Acc_y * Acc_y) + (Acc_z * Acc_z)); //Calculate the total accelerometer vector
-    Acc_Pitch = asin((float) Acc_y / Acc_total_vector) * (180 / M_PI); //Calculate the pitch angle
-    Acc_Roll = asin((float) Acc_x / Acc_total_vector) * (-180 / M_PI); //Calculate the roll angle
-    Roll = Acc_Roll;
-    Pitch = Acc_Pitch;
+    //Acc_total_vector = sqrt((Acc_x * Acc_x) + (Acc_y * Acc_y) + (Acc_z * Acc_z)); //Calculate the total accelerometer vector
+    Acc_pitch_vector = sqrt((Acc_y * Acc_y) + (Acc_z * Acc_z));
+    Acc_roll_vector = sqrt((Acc_y * Acc_y) + (Acc_z * Acc_z));
+    Pitch = 180 * atan2(Acc_x, Acc_pitch_vector) / M_PI;
+    Roll = 180 * atan2(Acc_y, Acc_roll_vector) / M_PI;
+    //Acc_Pitch = asin((float) Acc_y / Acc_total_vector) * (180 / M_PI); //Calculate the pitch angle
+    //Acc_Roll = asin((float) Acc_x / Acc_total_vector) * (-180 / M_PI); //Calculate the roll angle
+    //Roll = Acc_Roll;
+    //Pitch = Acc_Pitch;
 
 }
